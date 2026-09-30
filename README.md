@@ -1,8 +1,8 @@
-# Computer-Use Automation
+# Computer-Use Discovery and Replay
 
-**An LLM discovers a workflow once. A typed capability replays it without model decisions.**
+**A bounded reference system that discovers one banking UI workflow with an LLM, compiles the executed evidence, and replays it deterministically.**
 
-[![Verify](https://github.com/bchauu/computer-use-automation/actions/workflows/ci.yml/badge.svg)](https://github.com/bchauu/computer-use-automation/actions/workflows/ci.yml)
+[![Verify](https://github.com/bchauu/computer-use-discovery-replay/actions/workflows/ci.yml/badge.svg)](https://github.com/bchauu/computer-use-discovery-replay/actions/workflows/ci.yml)
 
 This project operates a synthetic employee banking interface through its visible UI. OpenAI drives one genuine discovery run, the system compiles the executed actions into a versioned capability, and a separate Playwright interpreter reuses that capability with different inputs and members. Every action is policy checked, every checkpoint is verified, and uncertain runtime states stop or transfer control to a person.
 
