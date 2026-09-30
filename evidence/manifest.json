@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-30T06:56:01.254Z",
+  "model": "gpt-4o-mini",
+  "capability": {
+    "artifactId": "view-transaction-history",
+    "artifactVersion": 1,
+    "status": "validated"
+  },
+  "runs": [
+    {
+      "name": "discovery-live",
+      "runId": "a5505818-dcf0-4c96-b0a2-a511c5df4541",
+      "provenance": "genuine_openai",
+      "mode": "discovery",
+      "status": "succeeded",
+      "resultCode": "SUCCESS_CRITERIA_MET",
+      "modelRequestCount": 3,
+      "startedAt": "2026-09-30T05:53:40.608Z",
+      "finishedAt": "2026-09-30T05:53:46.747Z"
+    },
+    {
+      "name": "validation-replay",
+      "runId": "4dd6cc3d-f89d-4d67-9e85-3f6484e68494",
+      "provenance": "live_model_free_replay",
+      "mode": "validation_replay",
+      "status": "succeeded",
+      "resultCode": "REPLAY_SUCCEEDED",
+      "modelRequestCount": 0,
+      "startedAt": "2026-09-30T05:53:46.899Z",
+      "finishedAt": "2026-09-30T05:53:47.210Z"
+    },
+    {
+      "name": "cross-member-replay",
+      "runId": "a3cc7bf4-13c5-4d13-b2ee-842664809e59",
+      "provenance": "live_model_free_replay",
+      "mode": "replay",
+      "status": "succeeded",
+      "resultCode": "REPLAY_SUCCEEDED",
+      "modelRequestCount": 0,
+      "startedAt": "2026-09-30T05:54:00.152Z",
+      "finishedAt": "2026-09-30T05:54:00.461Z"
+    },
+    {
+      "name": "session-expiry-handoff",
+      "runId": "f33b84c5-36ef-414a-8fea-ee8f298e73ed",
+      "provenance": "injected_runtime_condition",
+      "mode": "replay",
+      "status": "succeeded",
+      "resultCode": "REPLAY_SUCCEEDED",
+      "modelRequestCount": 0,
+      "startedAt": "2026-09-30T06:54:29.313Z",
+      "finishedAt": "2026-09-30T06:54:29.690Z"
+    },
+    {
+      "name": "slow-load-recovery",
+      "runId": "a41e042f-ba1f-4931-9287-3f765ece78c8",
+      "provenance": "injected_runtime_condition",
+      "mode": "replay",
+      "status": "succeeded",
+      "resultCode": "REPLAY_SUCCEEDED",
+      "modelRequestCount": 0,
+      "startedAt": "2026-09-30T06:55:35.223Z",
+      "finishedAt": "2026-09-30T06:55:36.169Z"
+    },
+    {
+      "name": "known-notice-recovery",
+      "runId": "1003392f-9c08-4b6c-9201-406263099162",
+      "provenance": "injected_runtime_condition",
+      "mode": "replay",
+      "status": "succeeded",
+      "resultCode": "REPLAY_SUCCEEDED",
+      "modelRequestCount": 0,
+      "startedAt": "2026-09-30T06:55:36.651Z",
+      "finishedAt": "2026-09-30T06:55:36.981Z"
+    },
+    {
+      "name": "permission-intervention",
+      "runId": "4451698e-4b81-443a-8893-56b0fb96965d",
+      "provenance": "injected_runtime_condition",
+      "mode": "replay",
+      "status": "awaiting_human",
+      "resultCode": "PERMISSION_DENIED",
+      "modelRequestCount": 0,
+      "startedAt": "2026-09-30T06:55:37.509Z",
+      "finishedAt": "2026-09-30T06:55:37.775Z"
+    },
+    {
+      "name": "application-failure",
+      "runId": "68513634-09e3-4d18-9106-e1d98d39c830",
+      "provenance": "injected_runtime_condition",
+      "mode": "replay",
+      "status": "failed",
+      "resultCode": "APPLICATION_ERROR",
+      "modelRequestCount": 0,
+      "startedAt": "2026-09-30T06:55:38.260Z",
+      "finishedAt": "2026-09-30T06:55:38.526Z"
+    },
+    {
+      "name": "account-not-found",
+      "runId": "12e03d4c-82bb-4877-bb79-ea21734a072a",
+      "provenance": "synthetic_business_outcome",
+      "mode": "replay",
+      "status": "succeeded",
+      "resultCode": "ACCOUNT_NOT_FOUND",
+      "modelRequestCount": 0,
+      "startedAt": "2026-09-30T06:55:39.017Z",
+      "finishedAt": "2026-09-30T06:55:39.157Z"
+    },
+    {
+      "name": "no-transactions",
+      "runId": "a87290e1-856d-486f-a5e2-4e4961db996a",
+      "provenance": "synthetic_business_outcome",
+      "mode": "replay",
+      "status": "succeeded",
+      "resultCode": "NO_TRANSACTIONS",
+      "modelRequestCount": 0,
+      "startedAt": "2026-09-30T06:55:39.616Z",
+      "finishedAt": "2026-09-30T06:55:39.894Z"
+    }
+  ],
+  "files": {
+    "capability.json": "40355bf0c856f299eabcbbbf4b31d721e6bcc3a81ca6d7bfdd072641e88987d9",
+    "runs/account-not-found/events.jsonl": "18beb7dc1c66276fae0e2f9a483686ce63f0ef8589d531d57b59e022f1e7b51d",
+    "runs/account-not-found/run.json": "dd3dffc8408a7236dce52a7333344974d466a906383e7632d070f75762c8fd51",
+    "runs/application-failure/events.jsonl": "ac61d81569166a06ec7f13658874574f20068404d7cbc30ae57f0df8913df3ef",
+    "runs/application-failure/run.json": "08bdf4f786664e91f0a3c090fb9c85dbf1bffdf350f1719cf5ad9cad68eaf65e",
+    "runs/cross-member-replay/events.jsonl": "bbf944d866f0edc9af85f3d3adaa5fefc927ec2ae8bdb078c75406500aa62ed1",
+    "runs/cross-member-replay/run.json": "055f2762fff47d7269560742011f9d3f00dcaf57dcfeae244f14dcc3a8c80761",
+    "runs/discovery-live/action-evidence.jsonl": "5a401d9b508574d1f9336aa6d945d493060ebda207cdc50b0e36ee5e62350caf",
+    "runs/discovery-live/artifact.draft.json": "2caecaf59fc8360c0419d63baaf3b2c66888b716208a4cc8fb81688ae4e8fa88",
+    "runs/discovery-live/events.jsonl": "b4ff6f684ed0d87a7e6eae94a27e4d46509d0a36532e36ba4caa439e42bf0773",
+    "runs/discovery-live/run.json": "4649d1b4a946b462028db1ea6754f409c44e39fa618bea23587275e5f8fea190",
+    "runs/known-notice-recovery/events.jsonl": "a8c0778fd1727791ce94ea67cc84fd3a8b06550f1528d213303d7d5b5ba0bf11",
+    "runs/known-notice-recovery/run.json": "dab9f695e0e561486aa112f222780c5251a3ffa5947159ae7d1fbe4e828f840c",
+    "runs/no-transactions/events.jsonl": "4efbcc6a42992f3f5ad0487f290e1df8705c71d436f834b265be9da4f81cd256",
+    "runs/no-transactions/run.json": "787b9875c2d5d4ef45ffefb32eccc2c9dc4a3fd79429aedafa48a8504f1f0b19",
+    "runs/permission-intervention/events.jsonl": "17dad2d16c4c3aa968408c32c69d97b0793f935d2735d2315414e866c546b148",
+    "runs/permission-intervention/run.json": "efcccf943a33ca1153b952817394d57caea359f4e430f9fd354ef77ecf9fa048",
+    "runs/session-expiry-handoff/events.jsonl": "2529d6496c7c64564f6b2047feeb96ba5c4984d71b84d2f5eaad0e0699a05290",
+    "runs/session-expiry-handoff/run.json": "99f9b26fcdf32abfecd727f2fabe2d5757a28214335baed52b5876b1e53825b3",
+    "runs/slow-load-recovery/events.jsonl": "687368ee3f8930fbce63f5a7f882ff1f430797f6f60388ff30b75cf98162f121",
+    "runs/slow-load-recovery/run.json": "df0962ea328c8b5a40f5be56e990aa836204ac9725802361a02bd35ae3ce1394",
+    "runs/validation-replay/events.jsonl": "8b49e7b82030fa03e591ff89b802ea8724ab5cd3c73f7d69d0c3094910cb5967",
+    "runs/validation-replay/run.json": "858d0bd32dc592a24fdff67b78aee3a2a2b2c9a0352d7e5bca6cad122e477bd6"
+  },
+  "review": {
+    "rawHtmlExported": false,
+    "screenshotsExported": false,
+    "configuredApiKeyMatchFound": false,
+    "syntheticPinValueExported": false
+  }
+}

@@ -1,0 +1,225 @@
+{
+  "schemaVersion": 1,
+  "surface": {
+    "kind": "browser",
+    "frame": {
+      "kind": "top"
+    }
+  },
+  "artifactId": "view-transaction-history",
+  "artifactVersion": 1,
+  "status": "draft",
+  "capability": {
+    "name": "view_transaction_history",
+    "description": "Open transaction history for an account belonging to the currently verified member.",
+    "effect": "read_only"
+  },
+  "inputs": {
+    "accountType": {
+      "type": "enum",
+      "required": true,
+      "values": [
+        "checking",
+        "savings"
+      ],
+      "uiValues": {
+        "checking": "Checking",
+        "savings": "Savings"
+      }
+    },
+    "period": {
+      "type": "enum",
+      "required": true,
+      "values": [
+        "latest",
+        "7_days",
+        "14_days",
+        "30_days"
+      ],
+      "uiValues": {
+        "latest": "Latest posted transaction",
+        "7_days": "Last 7 days",
+        "14_days": "Last 14 days",
+        "30_days": "Last 30 days"
+      }
+    }
+  },
+  "preconditions": [
+    {
+      "kind": "verified_member",
+      "expected": true
+    },
+    {
+      "kind": "verified_member_count",
+      "expected": 1
+    }
+  ],
+  "steps": [
+    {
+      "id": "step_1_click",
+      "action": {
+        "kind": "click",
+        "expectedEffect": "navigate"
+      },
+      "target": {
+        "strategy": "role",
+        "role": "link",
+        "accessibleName": {
+          "value": "Transactions",
+          "match": "exact"
+        },
+        "expectedCount": 1
+      },
+      "timeoutMs": 30000,
+      "retry": {
+        "maxAttempts": 2,
+        "allowedWhen": [
+          "target_not_ready"
+        ]
+      },
+      "postconditions": [
+        {
+          "kind": "heading_visible",
+          "text": "Transaction inquiry"
+        }
+      ],
+      "checkpoint": {
+        "routeTemplate": "/#/transactions",
+        "requiredHeadings": [
+          "Transaction inquiry"
+        ],
+        "selectedValue": null
+      },
+      "sourceStep": 1
+    },
+    {
+      "id": "step_2_click",
+      "action": {
+        "kind": "click",
+        "expectedEffect": "navigate"
+      },
+      "target": {
+        "strategy": "scoped_role",
+        "scope": {
+          "role": "row",
+          "containsInput": "accountType"
+        },
+        "role": "link",
+        "accessibleName": {
+          "value": "View history",
+          "match": "exact"
+        },
+        "expectedCount": 1
+      },
+      "timeoutMs": 30000,
+      "retry": {
+        "maxAttempts": 2,
+        "allowedWhen": [
+          "target_not_ready"
+        ]
+      },
+      "postconditions": [
+        {
+          "kind": "heading_visible",
+          "text": "Posted transaction history"
+        }
+      ],
+      "checkpoint": {
+        "routeTemplate": "/#/members/{verifiedMemberId}/accounts/{selectedAccountId}/history",
+        "requiredHeadings": [
+          "Posted transaction history"
+        ],
+        "selectedValue": null
+      },
+      "sourceStep": 2
+    },
+    {
+      "id": "step_3_select",
+      "action": {
+        "kind": "select",
+        "valueFromInput": "period",
+        "expectedEffect": "read"
+      },
+      "target": {
+        "strategy": "label",
+        "label": "History period",
+        "expectedCount": 1
+      },
+      "timeoutMs": 30000,
+      "retry": {
+        "maxAttempts": 2,
+        "allowedWhen": [
+          "target_not_ready",
+          "value_not_applied"
+        ]
+      },
+      "postconditions": [],
+      "checkpoint": {
+        "routeTemplate": "/#/members/{verifiedMemberId}/accounts/{selectedAccountId}/history",
+        "requiredHeadings": [],
+        "selectedValue": {
+          "label": "History period",
+          "valueFromInput": "period"
+        }
+      },
+      "sourceStep": 3
+    }
+  ],
+  "outputs": {
+    "account": {
+      "kind": "account_context",
+      "fields": [
+        "accountType",
+        "accountLastFour"
+      ]
+    },
+    "transactions": {
+      "kind": "table",
+      "columns": [
+        "postedDate",
+        "description",
+        "reference",
+        "status",
+        "debit",
+        "credit"
+      ]
+    }
+  },
+  "completion": {
+    "all": [
+      {
+        "kind": "verified_member_preserved"
+      },
+      {
+        "kind": "account_type_matches_input",
+        "input": "accountType"
+      },
+      {
+        "kind": "history_period_matches_input",
+        "input": "period"
+      },
+      {
+        "kind": "transaction_history_visible"
+      }
+    ]
+  },
+  "limits": {
+    "maxSteps": 8,
+    "overallTimeoutMs": 300000
+  },
+  "source": {
+    "kind": "discovery_run",
+    "runId": "a5505818-dcf0-4c96-b0a2-a511c5df4541",
+    "testedModel": "gpt-4o-mini",
+    "compiledAt": "2026-09-30T05:53:46.739Z",
+    "evidenceSteps": [
+      1,
+      2,
+      3
+    ],
+    "discoveryInputs": {
+      "accountType": "checking",
+      "period": "7_days"
+    }
+  }
+}

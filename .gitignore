@@ -1,0 +1,33 @@
+# Local secrets and configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Dependencies and generated builds
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Local runtime state and unreviewed captures
+.local/
+.sessions/
+playwright/.auth/
+test-results/
+playwright-report/
+tmp/
+*.log
+*.har
+
+# Machine-local files
+.DS_Store
+.codex/
+.agents/
+
+# Private working instructions; public docs describe the system itself
+/AGENTS.md
+
+# Deliberately export only reviewed, sanitized evidence into evidence/.

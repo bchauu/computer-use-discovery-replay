@@ -1,0 +1,54 @@
+{
+  "name": "computer-use-automation",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.22.0 <23",
+    "npm": ">=10"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:operator": "vite --config apps/operator/vite.config.ts",
+    "dev:bank": "vite --config apps/bank/vite.config.ts",
+    "dev:automation-api": "node --env-file-if-exists=.env --experimental-strip-types --watch src/automation/main.ts",
+    "dev:bank-api": "node --env-file-if-exists=.env --experimental-strip-types --watch src/bank/server.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "npm run typecheck && tsc -p tsconfig.server.json && vite build --config apps/operator/vite.config.ts && vite build --config apps/bank/vite.config.ts",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "check": "npm run typecheck && npm test && npm run build",
+    "start:automation-api": "node --env-file-if-exists=.env dist/server/automation/main.js",
+    "start:bank-api": "node --env-file-if-exists=.env dist/server/bank/server.js",
+    "db:local": "node scripts/mongo-local.mjs",
+    "db:check": "node --env-file-if-exists=.env --experimental-strip-types scripts/check-mongo.ts",
+    "browser:install": "playwright install chromium",
+    "browser:check": "node scripts/check-browser.mjs",
+    "test:bank-data": "node --experimental-strip-types --test tests/bank-data.test.ts",
+    "test:discovery": "node --experimental-strip-types --test tests/discovery.test.ts tests/capability.test.ts tests/replay.test.ts",
+    "test:bank-ui": "node scripts/check-bank-ui.mjs",
+    "mock:system": "node --env-file-if-exists=.env --experimental-strip-types scripts/mock-system-run.ts",
+    "live:system": "node --env-file-if-exists=.env --experimental-strip-types scripts/live-system-run.ts",
+    "replay:catalog": "node --env-file-if-exists=.env --experimental-strip-types scripts/catalog-replay-run.ts",
+    "handoff:system": "node --env-file-if-exists=.env --experimental-strip-types scripts/handoff-system-run.ts",
+    "runtime:system": "node --env-file-if-exists=.env --experimental-strip-types scripts/runtime-system-run.ts",
+    "evidence:export": "node --env-file-if-exists=.env --experimental-strip-types scripts/export-evidence.ts"
+  },
+  "dependencies": {
+    "express": "5.2.1",
+    "mongoose": "9.10.1",
+    "openai": "7.21.0",
+    "playwright": "1.62.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6",
+    "@types/node": "22.15.29",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.1.1",
+    "typescript": "5.9.3",
+    "vite": "8.3.0"
+  }
+}

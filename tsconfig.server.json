@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": false,
+    "rewriteRelativeImportExtensions": true,
+    "outDir": "dist/server",
+    "rootDir": "src",
+    "lib": ["ES2023", "DOM"],
+    "types": ["node"]
+  },
+  "include": ["src"],
+  "exclude": ["apps", "tests", "scripts"]
+}
