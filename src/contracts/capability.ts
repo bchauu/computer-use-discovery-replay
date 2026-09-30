@@ -154,6 +154,10 @@ export const capabilityArtifactSchema = z.object({
         accessibleName: z.literal('Next'),
         maxPages: z.number().int().min(1).max(100),
       }).strict().default({ kind: 'next_button', accessibleName: 'Next', maxPages: 20 }),
+      money: z.object({
+        currency: z.literal('USD'),
+        parser: z.literal('usd_display_v1'),
+      }).strict().default({ currency: 'USD', parser: 'usd_display_v1' }),
     }).strict(),
   }).strict(),
   completion: z.object({

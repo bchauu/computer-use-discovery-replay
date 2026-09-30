@@ -187,6 +187,10 @@
         "kind": "next_button",
         "accessibleName": "Next",
         "maxPages": 20
+      },
+      "money": {
+        "currency": "USD",
+        "parser": "usd_display_v1"
       }
     }
   },

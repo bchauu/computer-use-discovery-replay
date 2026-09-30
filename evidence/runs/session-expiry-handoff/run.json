@@ -35,7 +35,13 @@
           "reference": "TX-100001",
           "status": "Posted",
           "debit": null,
-          "credit": "$2,450.00"
+          "credit": "$2,450.00",
+          "direction": "credit",
+          "amount": {
+            "display": "$2,450.00",
+            "currency": "USD",
+            "minorUnits": 245000
+          }
         },
         {
           "postedDate": "Sep 27, 2026",
@@ -43,7 +49,13 @@
           "reference": "TX-100002",
           "status": "Posted",
           "debit": "$84.32",
-          "credit": null
+          "credit": null,
+          "direction": "debit",
+          "amount": {
+            "display": "$84.32",
+            "currency": "USD",
+            "minorUnits": 8432
+          }
         },
         {
           "postedDate": "Sep 25, 2026",
@@ -51,7 +63,13 @@
           "reference": "TX-100003",
           "status": "Posted",
           "debit": "$126.40",
-          "credit": null
+          "credit": null,
+          "direction": "debit",
+          "amount": {
+            "display": "$126.40",
+            "currency": "USD",
+            "minorUnits": 12640
+          }
         },
         {
           "postedDate": "Sep 24, 2026",
@@ -59,7 +77,13 @@
           "reference": "TX-100004",
           "status": "Posted",
           "debit": "$300.00",
-          "credit": null
+          "credit": null,
+          "direction": "debit",
+          "amount": {
+            "display": "$300.00",
+            "currency": "USD",
+            "minorUnits": 30000
+          }
         }
       ]
     },

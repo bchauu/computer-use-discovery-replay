@@ -16,9 +16,9 @@ Use `npm ci` for reproducible installs from the lockfile. No model calls were ma
 
 ## Database setup
 
-Copy `.env.example` to `.env` if it does not exist. `npm run db:local` starts an isolated MongoDB process on loopback port 27018 with project-local data under `.local/mongo`. Stop it with Ctrl+C. It does not use or alter another project's database.
+Copy `.env.example` to `.env` if it does not exist. `npm run db:local` starts an isolated MongoDB process on loopback port 27018 with project-local data under `.local/mongo`. Stop it with Ctrl+C. It does not use or alter another project's database. Only `AUTOMATION_MONGODB_URI` is required for persisted runs and capabilities; the synthetic bank UI uses bundled fixtures.
 
-Alternatively, supply dedicated `AUTOMATION_MONGODB_URI` and `BANK_MONGODB_URI` values. Use separate database credentials with limited privileges for hosted deployments. `npm run db:check` pings each configured server without writing data and suppresses connection details on errors.
+Alternatively, point `AUTOMATION_MONGODB_URI` at a dedicated database in a hosted cluster. Reusing a development cluster is acceptable, but use a separate database name and preferably an application-scoped user. `npm run db:check` pings it without writing data and suppresses connection details on errors. `npm run persistence:system` then creates uniquely identified synthetic run and artifact records, reconnects and validates them plus the required indexes, and deletes only those temporary records.
 
 The local standalone server is sufficient for the initial read-only target and foundation checks. It does not support multi-document transactions; introduce a replica set if the accepted persistence design requires them. Do not weaken consistency requirements merely to preserve the local topology.
 
@@ -39,7 +39,9 @@ The first-run defaults allow 40 actions, ten minutes overall, two minutes per mo
 - `npm run mock:system`: injected discovery → draft compilation → different-input model-free validation replay against the running real banking UI.
 - `npm run live:system`: genuine OpenAI discovery → draft compilation → different-period model-free validation replay against the running real banking UI.
 - `npm run handoff:system`: injected employee-session expiry → same-session human relay → checkpointed model-free resume.
+- `npm run stability:system`: repeated model-free replay across periods, members, pagination, and business outcomes; writes an ignored local aggregate under `.local/stability/`.
 - `npm run evidence:export`: reconstruct and scan the reviewed evidence bundle from retained local runs.
+- `npm run persistence:system`: MongoDB write, reconnect, read, schema/index verification, and targeted cleanup using synthetic records.
 - `npm run build`: type-check, compile services, and build both React apps.
 - `npm run db:check`: read-only database connectivity check.
 - `npm run browser:check`: launch Chromium and click a local in-memory test page. It is a tooling smoke check, not discovery evidence.

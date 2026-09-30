@@ -25,6 +25,8 @@ The assessment is the baseline. The broader goal is a well-tested, understandabl
 - [x] Complete the first executable discovery-to-replay slice for a different period on the same verified member.
 - [x] Replay the genuinely discovered artifact from a separate process for a different verified member and account number.
 - [x] Export reviewed genuine and injected execution evidence with provenance and sensitive-canary scans.
+- [x] Measure 20 repeated model-free replays across inputs, pagination, and business outcomes with consistent outputs.
+- [x] Add MongoDB index initialization and a reconnect/read/cleanup persistence verification command.
 
 ## Sprint sequence
 

@@ -58,9 +58,9 @@ The quality target extends beyond a happy-path demonstration. Operational guaran
 
 ## Stack
 
-React + TypeScript + Vite for the operator console and banking demo; Node.js + Express for their separate backend services; MongoDB + Mongoose for persistence; OpenAI for discovery; Playwright for browser control. Node's built-in test runner provides the initial backend checks.
+React + TypeScript + Vite for the operator console and banking demo; Node.js + Express for their separate backend services; MongoDB + Mongoose for automation persistence; OpenAI for discovery; Playwright for browser control. Node's built-in test runner provides the backend checks.
 
-The automation service receives only its own database connection. Banking data must be read through the browser UI. Locally, the two databases may share a MongoDB server; a hosted environment needs separate credentials and access permissions.
+Only the automation service needs a database connection. Banking data is bundled synthetic fixture data and must be read through the browser UI; `BANK_MONGODB_URI` is optional infrastructure plumbing and is not required for the demonstrated workflow.
 
 ## Project hub
 
@@ -128,8 +128,10 @@ npm test
 npm run build
 npm run runtime:system
 npm run handoff:system
+npm run stability:system
 npm run evidence:export
 npm run db:check
+npm run persistence:system
 npm run browser:check
 ```
 
@@ -143,6 +145,6 @@ A genuine GPT-4o mini run has now operated the real local React banking UI with 
 
 A separate process verified Jordan Lee, parsed the differently worded request “checking account activity for the last 14 days,” selected the persisted capability, and replayed it against checking account ending `7150`. It extracted two transactions with zero model requests. A 30-day replay traversed the target's second results page and extracted all 14 matching transactions. The runtime suite also retained missing-account and no-transaction business outcomes, slow-load and known-notice recovery, permission intervention, and application failure.
 
-The reviewed bundle under [`evidence/`](evidence/) contains the genuine discovery, model-free replays, runtime outcomes, and latest same-session handoff. Its manifest labels provenance, hashes exported files, and records successful API-key and PIN-canary scans. The HTTP integration additionally verifies token enforcement, exclusive ownership, premature-resume rejection, and stale/late command fencing.
+The reviewed bundle under [`evidence/`](evidence/) contains the genuine discovery, model-free replays, runtime outcomes, latest same-session handoff, and a 20-run stability study. All 20 repeated replays produced their expected result with consistent outputs and zero model requests; observed duration was 158–442 ms with a 417 ms p95 on the development machine. The manifest labels provenance, hashes exported files, and records successful API-key and PIN-canary scans. The HTTP integration additionally verifies token enforcement, exclusive ownership, premature-resume rejection, and stale/late command fencing.
 
 The initial implementation targets one browser application. Desktop support and reuse across tenant variants remain explicit design extensions. See [`REPORT.md`](REPORT.md) for architecture, guarantees, evidence-backed behavior, and deliberate cuts.

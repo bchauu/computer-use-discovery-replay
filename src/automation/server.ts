@@ -10,6 +10,7 @@ import type { DecisionClient } from '../discovery/model.ts';
 import { readOnlyDiscoveryPolicy } from '../discovery/policy.ts';
 import { ReplayController } from '../discovery/replay.ts';
 import { SessionRegistry } from '../discovery/sessions.ts';
+import { ensureAutomationIndexes } from '../discovery/storage.ts';
 
 const sessions = new SessionRegistry();
 const numberEnv = (name: string, fallback: number) => {
@@ -33,6 +34,13 @@ export function configureAutomation(app: express.Express, database: Connection, 
   decisionClient?: DecisionClient | null;
   catalogDirectory?: string;
 } = {}) {
+  const initializeStorage = () => {
+    void ensureAutomationIndexes(database)
+      .then(() => console.info(JSON.stringify({ service: 'automation', event: 'database_indexes_ready' })))
+      .catch(() => console.error(JSON.stringify({ service: 'automation', event: 'database_indexes_failed' })));
+  };
+  if (database.readyState === 1) initializeStorage();
+  else database.once('connected', initializeStorage);
   const activeSessions = options.sessionRegistry ?? sessions;
   const activeModelClient = options.decisionClient === undefined ? modelClient : options.decisionClient;
   const catalog = new CapabilityCatalog(database, options.catalogDirectory);

@@ -35,7 +35,13 @@
           "reference": "TX-300001",
           "status": "Posted",
           "debit": null,
-          "credit": "$1,800.00"
+          "credit": "$1,800.00",
+          "direction": "credit",
+          "amount": {
+            "display": "$1,800.00",
+            "currency": "USD",
+            "minorUnits": 180000
+          }
         },
         {
           "postedDate": "Sep 23, 2026",
@@ -43,7 +49,13 @@
           "reference": "TX-300002",
           "status": "Posted",
           "debit": "$72.30",
-          "credit": null
+          "credit": null,
+          "direction": "debit",
+          "amount": {
+            "display": "$72.30",
+            "currency": "USD",
+            "minorUnits": 7230
+          }
         }
       ]
     },

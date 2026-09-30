@@ -21,6 +21,7 @@
     "start:bank-api": "node --env-file-if-exists=.env dist/server/bank/server.js",
     "db:local": "node scripts/mongo-local.mjs",
     "db:check": "node --env-file-if-exists=.env --experimental-strip-types scripts/check-mongo.ts",
+    "persistence:system": "node --env-file-if-exists=.env --experimental-strip-types scripts/persistence-system-run.ts",
     "browser:install": "playwright install chromium",
     "browser:check": "node scripts/check-browser.mjs",
     "test:bank-data": "node --experimental-strip-types --test tests/bank-data.test.ts",
@@ -31,6 +32,7 @@
     "replay:catalog": "node --env-file-if-exists=.env --experimental-strip-types scripts/catalog-replay-run.ts",
     "handoff:system": "node --env-file-if-exists=.env --experimental-strip-types scripts/handoff-system-run.ts",
     "runtime:system": "node --env-file-if-exists=.env --experimental-strip-types scripts/runtime-system-run.ts",
+    "stability:system": "node --env-file-if-exists=.env --experimental-strip-types scripts/stability-system-run.ts",
     "evidence:export": "node --env-file-if-exists=.env --experimental-strip-types scripts/export-evidence.ts"
   },
   "dependencies": {

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-for (const name of ['AUTOMATION_MONGODB_URI', 'BANK_MONGODB_URI'] as const) {
+for (const name of ['AUTOMATION_MONGODB_URI'] as const) {
   const uri = process.env[name];
   if (!uri) {
     console.error(`${name}: not configured`);
@@ -18,4 +18,8 @@ for (const name of ['AUTOMATION_MONGODB_URI', 'BANK_MONGODB_URI'] as const) {
   } finally {
     await connection.close();
   }
+}
+
+if (!process.env.BANK_MONGODB_URI?.trim()) {
+  console.info('BANK_MONGODB_URI: not configured (expected; the synthetic bank uses bundled fixtures)');
 }

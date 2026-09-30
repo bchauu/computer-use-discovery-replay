@@ -111,9 +111,10 @@ async function extractOutput(
       const description = cells[1]?.querySelector('strong')?.textContent?.trim() ?? '';
       const reference = cells[1]?.querySelector('small')?.textContent?.trim() ?? '';
       const value = (index: number) => cells[index]?.textContent?.trim() ?? '';
+      const money = (index: number) => value(index).startsWith('$') ? value(index) : null;
       return {
         postedDate: value(0), description, reference, status: value(2),
-        debit: value(3) === '—' ? null : value(3), credit: value(4) === '—' ? null : value(4),
+        debit: money(3), credit: money(4),
       };
     }));
     for (const row of rows) {

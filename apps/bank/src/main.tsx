@@ -93,6 +93,11 @@ function AutomationShortcut({ member }: { member: Member }) {
   const [handoffEpoch, setHandoffEpoch] = useState<number | null>(null);
   const [employeePin, setEmployeePin] = useState('');
   const [events, setEvents] = useState<Array<{ sequence: number; type: string; code: string; purpose: string | null }>>([]);
+  const [runDetails, setRunDetails] = useState<{
+    category: string | null; code: string | null; transactionCount: number | null;
+    accountLastFour: string | null; artifactStatus: string | null; modelRequests: number;
+    diagnosticPhase: string | null;
+  }>({ category: null, code: null, transactionCount: null, accountLastFour: null, artifactStatus: null, modelRequests: 0, diagnosticPhase: null });
   useEffect(() => {
     if (!runId || !controlToken) return;
     const controller = new AbortController();
@@ -100,8 +105,22 @@ function AutomationShortcut({ member }: { member: Member }) {
       try {
         const response = await fetch(`/automation-api/api/runs/${runId}`, { headers: { 'x-control-token': controlToken }, signal: controller.signal });
         if (!response.ok) throw new Error('POLL_FAILED');
-        const run = await response.json() as { mode: string; status: string; step: number; result: { message: string } | null; events: typeof events };
+        const run = await response.json() as {
+          mode: string; status: string; step: number;
+          result: { message: string; category: string; code: string; output: { account: { accountLastFour: string }; transactions: unknown[] } | null; diagnostic: { phase: string } | null } | null;
+          artifact: { status: string } | null;
+          events: typeof events;
+        };
         setMode(run.mode); setRunStatus(run.status); setStatus(run.result?.message || run.status.replace('_', ' ')); setStep(run.step); setEvents(run.events.slice(-6));
+        setRunDetails({
+          category: run.result?.category ?? null,
+          code: run.result?.code ?? null,
+          transactionCount: run.result?.output?.transactions.length ?? null,
+          accountLastFour: run.result?.output?.account.accountLastFour ?? null,
+          artifactStatus: run.artifact?.status ?? null,
+          modelRequests: run.events.filter(item => item.type === 'model_request').length,
+          diagnosticPhase: run.result?.diagnostic?.phase ?? null,
+        });
         if (['created', 'running', 'awaiting_human'].includes(run.status)) window.setTimeout(poll, 750);
       } catch { if (!controller.signal.aborted) setStatus('Run status unavailable'); }
     };
@@ -110,18 +129,19 @@ function AutomationShortcut({ member }: { member: Member }) {
   }, [runId, controlToken]);
   if (!sessionId || !controlToken) return null;
   async function start(event: FormEvent) {
-    event.preventDefault(); setStatus('Starting discovery…'); setEvents([]);
+    event.preventDefault(); setStatus('Starting automation…'); setEvents([]);
+    setRunDetails({ category: null, code: null, transactionCount: null, accountLastFour: null, artifactStatus: null, modelRequests: 0, diagnosticPhase: null });
     try {
       const response = await fetch('/automation-api/api/runs', {
         method: 'POST', headers: { 'content-type': 'application/json', 'x-control-token': controlToken! },
         body: JSON.stringify({ sessionId, goal }),
       });
       const body = await response.json() as { runId?: string; mode?: string; message?: string; code?: string };
-      if (!response.ok || !body.runId) throw new Error(body.message || body.code || 'Could not start discovery.');
+      if (!response.ok || !body.runId) throw new Error(body.message || body.code || 'Could not start automation.');
       setRunId(body.runId); setMode(body.mode ?? null); setRunStatus('running'); setHandoffEpoch(null); setEmployeePin(''); setStatus('running');
-    } catch (error) { setStatus(error instanceof Error ? error.message : 'Could not start discovery.'); }
+    } catch (error) { setStatus(error instanceof Error ? error.message : 'Could not start automation.'); }
   }
-  const running = ['created', 'running', 'awaiting_human'].includes(runStatus) || status === 'Starting discovery…';
+  const running = ['created', 'running', 'awaiting_human'].includes(runStatus) || status === 'Starting automation…';
   async function cancel() {
     if (!runId || !controlToken) return;
     setStatus('Cancelling…');
@@ -165,11 +185,18 @@ function AutomationShortcut({ member }: { member: Member }) {
     } catch (error) { setStatus(error instanceof Error ? error.message : 'Could not resume automation'); }
   }
   return <aside className="ai-shortcut" aria-label="AI navigation shortcut">
-    <div className="ai-title"><span aria-hidden="true">✦</span><div><strong>AI navigation</strong><small>Discovery mode · Read-only</small></div></div>
-    <form onSubmit={start}><label htmlFor="automation-goal">What does the customer need?</label><textarea id="automation-goal" required minLength={8} maxLength={500} disabled={running} value={goal} onChange={event => setGoal(event.target.value)} placeholder="Show this member’s checking transactions for the last 7 days."/><button className="button primary" disabled={running} type="submit">{running ? 'Navigating…' : 'Start discovery'}</button>{running && <button className="button" type="button" onClick={cancel}>Cancel</button>}</form>
+    <div className="ai-title"><span aria-hidden="true">✦</span><div><strong>AI navigation</strong><small>{mode ? mode.replace('_', ' ') : 'Ready'} · Read-only</small></div></div>
+    <form onSubmit={start}><label htmlFor="automation-goal">What does the customer need?</label><textarea id="automation-goal" required minLength={8} maxLength={500} disabled={running} value={goal} onChange={event => setGoal(event.target.value)} placeholder="Show this member’s checking transactions for the last 7 days."/><button className="button primary" disabled={running} type="submit">{running ? 'Navigating…' : 'Start automation'}</button>{running && <button className="button" type="button" onClick={cancel}>Cancel</button>}</form>
     <div className="ai-status" role="status"><strong>{status}</strong>{mode && <span>{mode.replace('_', ' ')}</span>}{step > 0 && <span>Step {step}</span>}</div>
     {runStatus === 'awaiting_human' && handoffEpoch === null && <button className="button handoff-button" type="button" onClick={claimControl}>Claim control</button>}
     {runStatus === 'awaiting_human' && handoffEpoch !== null && <form className="handoff-form" onSubmit={reauthenticate} autoComplete="off"><label htmlFor="relay-employee-pin">Employee PIN</label><input id="relay-employee-pin" type="password" required value={employeePin} onChange={event => setEmployeePin(event.target.value)} autoComplete="off"/><button className="button primary" type="submit">Re-authenticate and resume</button></form>}
+    {runDetails.code && <dl className="ai-result" aria-label="Run result">
+      <div><dt>Outcome</dt><dd>{runDetails.category?.replace('_', ' ')} · {runDetails.code}</dd></div>
+      <div><dt>Execution</dt><dd>{mode?.replace('_', ' ')} · {runDetails.modelRequests} model request{runDetails.modelRequests === 1 ? '' : 's'}</dd></div>
+      {runDetails.artifactStatus && <div><dt>Capability</dt><dd>{runDetails.artifactStatus}</dd></div>}
+      {runDetails.transactionCount !== null && <div><dt>Output</dt><dd>{runDetails.transactionCount} transaction{runDetails.transactionCount === 1 ? '' : 's'}{runDetails.accountLastFour ? ` · •••• ${runDetails.accountLastFour}` : ''}</dd></div>}
+      {runDetails.diagnosticPhase && <div><dt>Diagnostic</dt><dd>{runDetails.diagnosticPhase.replace('_', ' ')}</dd></div>}
+    </dl>}
     {events.length > 0 && <ol className="ai-events">{events.map(item => <li key={item.sequence}><span>{item.type.replace('_', ' ')}</span><strong>{item.purpose || item.code}</strong></li>)}</ol>}
   </aside>;
 }

@@ -125,6 +125,7 @@ export function compileTransactionHistoryArtifact(
         kind: 'table',
         columns: ['postedDate', 'description', 'reference', 'status', 'debit', 'credit'],
         pagination: { kind: 'next_button', accessibleName: 'Next', maxPages: 20 },
+        money: { currency: 'USD', parser: 'usd_display_v1' },
       },
     },
     completion: {

@@ -35,7 +35,7 @@ This demonstrates a legacy web case while keeping failures repeatable. It does n
 | Operator console | React + Vite, small custom CSS | Run creation, timeline, artifact inspection, live-session handoff |
 | Updates | Server-sent events for run events; HTTP commands | Simple one-way telemetry and explicit mutation requests |
 | Live view | On-demand/polled screenshots with coordinate input relay | Minimal real same-session operation; no full streaming desktop product |
-| Persistence | MongoDB/Mongoose for run and capability persistence; JSON/JSONL evidence exports | Document-oriented automation records; separate synthetic banking data |
+| Persistence | MongoDB/Mongoose for run and capability persistence; JSON/JSONL evidence exports | Document-oriented automation records; banking fixtures remain bundled in the target UI |
 | Telemetry | Structured events first; OpenTelemetry traces/metrics with optional exporter | Local evidence works without a hosted telemetry service |
 | Testing | Node test runner for initial backend checks; Playwright for browser verification | Exercise invariants and externally visible behavior |
 

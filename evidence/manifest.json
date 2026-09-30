@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-30T15:25:46.143Z",
+  "generatedAt": "2026-09-30T16:12:30.099Z",
   "model": "gpt-4o-mini",
   "capability": {
     "artifactId": "view-transaction-history",
@@ -131,31 +131,32 @@
     }
   ],
   "files": {
-    "capability.json": "e221d47456089c24beac08fc291bf113c25579aa1f0d0da4bebf8cd0d6d19918",
+    "capability.json": "decb2cd8fc51618a19638dbac46acb465be421aede0b65536e7492d4d9fff18f",
     "runs/account-not-found/events.jsonl": "4ca972eb4da84fa5998059a704b8814a4fca0451ef22a2f576b63de00eb32b68",
     "runs/account-not-found/run.json": "c4cb62726609a6fe82ed3940560a8549f98d74272abf95862fe66fd6d9506b49",
     "runs/application-failure/events.jsonl": "54954f6e3aa3104ab9213a6e2ac1831482850a4ddcc2eb5fd83a8cd59b768706",
     "runs/application-failure/run.json": "6778e410e7c3811865501ed71877cd0bc4f28a5d757967bf2cd331f3a9951147",
     "runs/cross-member-replay/events.jsonl": "5737ad59b70f9dd702989c5bb8dd6166b84897a21fc03004d149b0c2e592315f",
-    "runs/cross-member-replay/run.json": "61b86b25b4a69a214b8a52a556ef0973f559532416ddb5f118e46fd44b4a8fb2",
+    "runs/cross-member-replay/run.json": "27bc74c5dbc99ed2918c1c534df91f7d9a8c6443fd05a3500733f9e94e25e098",
     "runs/discovery-live/action-evidence.jsonl": "5a401d9b508574d1f9336aa6d945d493060ebda207cdc50b0e36ee5e62350caf",
-    "runs/discovery-live/artifact.draft.json": "de5fdf517b370b4f6a74d55f8cf1513057fff7b054bde5406ea23373465a8a3d",
+    "runs/discovery-live/artifact.draft.json": "9f5870e4b7ed898c36001b492e23e5b310ed333ddb3b937a1d1d9b8995b3fb98",
     "runs/discovery-live/events.jsonl": "b4ff6f684ed0d87a7e6eae94a27e4d46509d0a36532e36ba4caa439e42bf0773",
     "runs/discovery-live/run.json": "4649d1b4a946b462028db1ea6754f409c44e39fa618bea23587275e5f8fea190",
     "runs/full-pagination-replay/events.jsonl": "401dc20c3b6fe4e11c4fd8cedff725c564497bd13bc9961448ab985d450ed94b",
-    "runs/full-pagination-replay/run.json": "0b47c7f07dc200e4c9913c406cc651f6946e4ee20f6c35ef131da11aa72d7181",
+    "runs/full-pagination-replay/run.json": "09f2aa4f84c461eb2ac9abeff5fb38fb945f082152730e55774da4e378a91c68",
     "runs/known-notice-recovery/events.jsonl": "c8407351fc3fdf07008078f772eee8e4441873c15b10545ea360610523bd4a25",
-    "runs/known-notice-recovery/run.json": "40bd35d9e96568c2b991c2f8d43f11789820c063e4f8e886ab4c464246b8c1f2",
+    "runs/known-notice-recovery/run.json": "bfb19625b55db298551015f03c58d92df3e7ab7a782bc49b527b55de6d15dc67",
     "runs/no-transactions/events.jsonl": "5d0806fc7bc52858157f8f0d17505ae25e5c690fc0d49a42a41f2a629ff53519",
     "runs/no-transactions/run.json": "7919d8f4517033d1f696fb559604a7f81a00acb50625a3830191986f9d8c9249",
     "runs/permission-intervention/events.jsonl": "005591cb079949e2fc2dbb13de7b7a1d34886e14758e1e0276ae76afa1ffa5ae",
     "runs/permission-intervention/run.json": "bccf1203b3996d97b08cdc505ad723011bd94e2ac1a6988015ce4e4a2b12adec",
     "runs/session-expiry-handoff/events.jsonl": "4d40dd3f88cd992fd31e366362713318de6bd3823845a52fcabf32b7996d2d03",
-    "runs/session-expiry-handoff/run.json": "9528549274c069943d81365dd919aa9f73991456addb09f5ee061977bc894767",
+    "runs/session-expiry-handoff/run.json": "c27401144a4d5ddea4d4d796b40163e97d8859f08c3c483d91379349780cb699",
     "runs/slow-load-recovery/events.jsonl": "c0a2df3c31361f77e9ff6785fab7eab9a525930992d2dace4ecf5ae841f7f669",
-    "runs/slow-load-recovery/run.json": "43463f7f04d9a6e195ce554a9890500fefb50ba044eb3be9883e8fc61d3900d9",
+    "runs/slow-load-recovery/run.json": "fd775cad3a500b5719d59a959848cd1848fc1d34958975825fba9bf3f4d393be",
     "runs/validation-replay/events.jsonl": "8b49e7b82030fa03e591ff89b802ea8724ab5cd3c73f7d69d0c3094910cb5967",
-    "runs/validation-replay/run.json": "858d0bd32dc592a24fdff67b78aee3a2a2b2c9a0352d7e5bca6cad122e477bd6"
+    "runs/validation-replay/run.json": "d92b0d680f7803353fcec433f707d88666952fd51c18c6124c213a01c65f88f8",
+    "stability-summary.json": "ab972a6e9d229eb49a06d830e51db5d8cbd4e7e6e8496b0beff37847487f1968"
   },
   "review": {
     "rawHtmlExported": false,

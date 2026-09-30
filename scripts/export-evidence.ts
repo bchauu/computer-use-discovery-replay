@@ -3,6 +3,7 @@ import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { actionEvidenceSchema, capabilityArtifactSchema } from '../src/contracts/capability.ts';
 import { publicRunSchema } from '../src/contracts/run.ts';
+import { stabilitySummarySchema } from '../src/contracts/stability.ts';
 
 const selections = [
   { name: 'discovery-live', runId: process.env.EVIDENCE_DISCOVERY_RUN || 'a5505818-dcf0-4c96-b0a2-a511c5df4541', provenance: 'genuine_openai' },
@@ -56,6 +57,11 @@ for (const selection of selections) {
 
 const capability = capabilityArtifactSchema.parse(JSON.parse(await readFile(path.resolve('.local', 'capabilities', 'view-transaction-history.json'), 'utf8')));
 await safeWrite(path.join(root, 'capability.json'), `${JSON.stringify(capability, null, 2)}\n`);
+const stability = stabilitySummarySchema.parse(JSON.parse(await readFile(path.resolve('.local', 'stability', 'latest.json'), 'utf8')));
+if (stability.modelRequestCount !== 0 || stability.successfulRuns !== stability.totalRuns || stability.expectedOutcomeRate !== 1) {
+  throw new Error('STABILITY_EVIDENCE_DID_NOT_PASS');
+}
+await safeWrite(path.join(root, 'stability-summary.json'), `${JSON.stringify(stability, null, 2)}\n`);
 
 const key = process.env.OPENAI_API_KEY?.trim();
 const forbidden = [/sk-[A-Za-z0-9_-]{12,}/, /"value"\s*:\s*"2468"/];

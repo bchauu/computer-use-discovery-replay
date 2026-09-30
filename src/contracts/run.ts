@@ -2,20 +2,63 @@ import { z } from 'zod';
 import { capabilityInputsSchema, successCriteriaSchema } from './discovery.ts';
 
 const nonemptyText = z.string().trim().min(1);
+const usdDisplayPattern = /^\$(?:\d{1,3}(?:,\d{3})*|\d+)\.\d{2}$/;
+const moneyValueSchema = z.object({
+  display: z.string().regex(usdDisplayPattern),
+  currency: z.literal('USD'),
+  minorUnits: z.number().int().nonnegative(),
+}).strict();
+
+function usdMinorUnits(display: string) {
+  if (!usdDisplayPattern.test(display)) return null;
+  const normalized = display.slice(1).replaceAll(',', '');
+  const [whole, fraction] = normalized.split('.');
+  const value = Number(whole) * 100 + Number(fraction);
+  return Number.isSafeInteger(value) ? value : null;
+}
+
+const transactionRowSchema = z.object({
+  postedDate: nonemptyText,
+  description: nonemptyText,
+  reference: nonemptyText,
+  status: nonemptyText,
+  debit: nonemptyText.nullable(),
+  credit: nonemptyText.nullable(),
+  direction: z.enum(['debit', 'credit']).optional(),
+  amount: moneyValueSchema.optional(),
+}).strict().superRefine((row, context) => {
+  const display = row.debit ?? row.credit;
+  const direction = row.debit ? 'debit' : 'credit';
+  const minorUnits = display ? usdMinorUnits(display) : null;
+  if (Boolean(row.debit) === Boolean(row.credit)) {
+    context.addIssue({ code: 'custom', message: 'A posted transaction must contain exactly one debit or credit amount.' });
+  } else if (minorUnits === null) {
+    context.addIssue({ code: 'custom', message: 'The transaction amount must be a supported USD display value.' });
+  }
+  if (row.direction && row.direction !== direction) context.addIssue({ code: 'custom', message: 'Transaction direction does not match its populated amount column.' });
+  if (row.amount && (row.amount.display !== display || row.amount.currency !== 'USD' || row.amount.minorUnits !== minorUnits)) {
+    context.addIssue({ code: 'custom', message: 'Normalized amount does not match its UI display value.' });
+  }
+}).transform(row => {
+  const display = (row.debit ?? row.credit)!;
+  return {
+    postedDate: row.postedDate,
+    description: row.description,
+    reference: row.reference,
+    status: row.status,
+    debit: row.debit,
+    credit: row.credit,
+    direction: row.debit ? 'debit' as const : 'credit' as const,
+    amount: { display, currency: 'USD' as const, minorUnits: usdMinorUnits(display)! },
+  };
+});
 
 export const transactionOutputSchema = z.object({
   account: z.object({
     accountType: z.enum(['checking', 'savings']),
     accountLastFour: z.string().regex(/^\d{4}$/),
   }).strict(),
-  transactions: z.array(z.object({
-    postedDate: nonemptyText,
-    description: nonemptyText,
-    reference: nonemptyText,
-    status: nonemptyText,
-    debit: nonemptyText.nullable(),
-    credit: nonemptyText.nullable(),
-  }).strict()),
+  transactions: z.array(transactionRowSchema),
 }).strict();
 export type TransactionOutput = z.infer<typeof transactionOutputSchema>;
 
