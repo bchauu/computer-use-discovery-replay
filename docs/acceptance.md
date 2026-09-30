@@ -1,6 +1,6 @@
 # Acceptance traceability
 
-Verified locally on 2026-09-29. “Injected” means a deterministic condition in the synthetic React target; it is never presented as genuine model behavior.
+Verified locally on 2026-09-30. “Injected” means a deterministic condition in the synthetic React target; it is never presented as genuine model behavior.
 
 | Requirement | Implementation | Verification/evidence |
 |---|---|---|
@@ -9,7 +9,7 @@ Verified locally on 2026-09-29. “Injected” means a deterministic condition i
 | R3 Bounded execution | Step, time, repeated-state, model-call, token, action, recovery, and handoff bounds | Discovery tests and runtime matrix |
 | R4 Typed versioned artifact | Strict Zod artifact separate from transcript | `evidence/capability.json`; compiler tests |
 | R5 Actions and robust targets | Ordered actions, exact role/label strategies, cardinality, top-frame scope, effect declarations | Capability and ambiguity tests |
-| R6 Typed I/O and success | Parameter bindings, extraction contract, checkpoints, independent completion | Validation and cross-member replay evidence |
+| R6 Typed I/O and success | Parameter bindings, bounded pagination, extraction contract, checkpoints, independent completion | Validation, cross-member, and full-pagination replay evidence |
 | R7 Model-free replay | Replay controller imports no model transport | Replay evidence has zero model-request events |
 | R8 Runtime conditions | Business outcomes, loading, known/unknown dialogs, permission, app error, expiry, ambiguity | Runtime integration test and exported scenario runs |
 | R9 Outcome taxonomy | Success, business outcome, intervention, hard failure, cancellation | Public run schema and scenario assertions |

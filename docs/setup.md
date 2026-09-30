@@ -10,7 +10,7 @@ One root npm package keeps installation simple. `apps/operator` and `apps/bank` 
 
 The setup machine has Node 22.22.0, npm 10.9.4, and MongoDB Community 7.0.16. Dependencies have now been installed and `package-lock.json` generated. `npm ls --depth=0` confirms all declared packages are present. The Playwright Chromium executable is also present.
 
-Verified on 2026-09-29: strict TypeScript checking, the automated suite, server compilation, production builds, Chromium-driven discovery/replay integration, runtime-condition matrix, HTTP handoff integration, and the complete banking walkthrough pass. GPT-4o mini completed a genuine three-action discovery; separate processes replayed the persisted artifact with different inputs and members with zero model calls. The reviewed evidence exporter validates provenance and sensitive-value scans.
+Verified on 2026-09-30: strict TypeScript checking, the automated suite, server compilation, production builds, Chromium-driven discovery/replay integration, runtime-condition matrix, HTTP handoff integration, and the complete banking walkthrough pass. GPT-4o mini completed a genuine three-action discovery; separate processes replayed the persisted artifact with different inputs and members with zero model calls. The reviewed evidence exporter validates provenance and sensitive-value scans.
 
 Use `npm ci` for reproducible installs from the lockfile. No model calls were made during these checks.
 
@@ -24,9 +24,9 @@ The local standalone server is sufficient for the initial read-only target and f
 
 ## OpenAI
 
-The server uses the Responses API with strict Structured Outputs. `OPENAI_MODEL` defaults to `gpt-4o-mini` and remains configurable. Configure `OPENAI_API_KEY` only for an authorized live discovery run. Never expose secrets through Vite-prefixed variables. The first retained genuine run used three model calls, 3,636 input tokens, and 168 output tokens; its evidence contains no copy of the configured key.
+The server uses the Responses API with strict Structured Outputs. `OPENAI_MODEL` defaults to `gpt-4o-mini` and remains configurable. Configure `OPENAI_API_KEY` only for an authorized live discovery run. Never expose secrets through Vite-prefixed variables. The first retained genuine run used three model calls, 3,636 input tokens, and 162 output tokens; its evidence contains no copy of the configured key.
 
-For an explicitly injected local wiring check, set `DISCOVERY_MODEL_MODE=mock` or run `npm run mock:system` while the banking UI and local MongoDB are running. The mock provider uses the same discovery controller and strict action contract, but its choices are scripted and must never be described as genuine LLM discovery evidence. `mock:system` uses an isolated temporary Mongo database, removes that database afterward, and leaves reviewable local run evidence under `.local/runs/`.
+For an explicitly injected local wiring check, set `DISCOVERY_MODEL_MODE=mock` or run `npm run mock:system` while the banking UI is running. The mock provider uses the same discovery controller and strict action contract, but its choices are scripted and must never be described as genuine LLM discovery evidence. If `AUTOMATION_MONGODB_URI` is reachable, `mock:system` uses an isolated temporary database and removes it afterward; otherwise, it exercises the local-file fallback. It leaves reviewable local run evidence under `.local/runs/`.
 
 The first-run defaults allow 40 actions, ten minutes overall, two minutes per model request, 30 seconds per UI action, three transient model attempts, and three repeated identical state/action decisions. All are configurable in `.env`. Authentication/configuration errors stop; transient rate-limit, timeout, connection, and 5xx failures retry with bounded exponential delay. A failed UI click is recorded as an unknown-effect result and is not blindly repeated.
 

@@ -149,6 +149,11 @@ export const capabilityArtifactSchema = z.object({
         z.literal('postedDate'), z.literal('description'), z.literal('reference'),
         z.literal('status'), z.literal('debit'), z.literal('credit'),
       ]),
+      pagination: z.object({
+        kind: z.literal('next_button'),
+        accessibleName: z.literal('Next'),
+        maxPages: z.number().int().min(1).max(100),
+      }).strict().default({ kind: 'next_button', accessibleName: 'Next', maxPages: 20 }),
     }).strict(),
   }).strict(),
   completion: z.object({

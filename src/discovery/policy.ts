@@ -92,3 +92,30 @@ export async function evaluateReplayPolicy(
   }
   return deny('TARGET_EFFECT_DENIED', 'The resolved target effect is not allowed for this artifact action.');
 }
+
+export async function evaluateExtractionPaginationPolicy(
+  page: Page,
+  locator: Locator,
+  allowedOrigin: string,
+  accessibleName: string,
+): Promise<ReplayPolicyDecision> {
+  const allow = (message: string): ReplayPolicyDecision => ({ ok: true, code: 'POLICY_ALLOWED', message, version: EXECUTION_POLICY_VERSION });
+  const deny = (code: Exclude<ReplayPolicyDecision['code'], 'POLICY_ALLOWED'>, message: string): ReplayPolicyDecision => ({ ok: false, code, message, version: EXECUTION_POLICY_VERSION });
+  const current = new URL(page.url());
+  const route = current.hash.slice(1) || current.pathname;
+  if (current.origin !== allowedOrigin || !/^\/members\/[^/]+\/accounts\/[^/]+\/history$/.test(route)) {
+    return deny('ROUTE_DENIED', 'Output pagination is allowed only on the declared same-origin history route.');
+  }
+  const target = await locator.evaluate(element => {
+    const button = element as HTMLButtonElement;
+    return {
+      tag: element.tagName.toLowerCase(),
+      name: element.getAttribute('aria-label') || button.innerText.replace(/\s+/g, ' ').trim(),
+      inForm: Boolean(element.closest('form')),
+    };
+  }).catch(() => null);
+  if (!target || target.tag !== 'button' || target.name !== accessibleName || target.inForm) {
+    return deny('TARGET_EFFECT_DENIED', 'Output pagination must resolve to the exact non-form button declared by the artifact.');
+  }
+  return allow('The declared same-origin read-only output pagination action is allowed.');
+}

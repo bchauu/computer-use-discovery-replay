@@ -12,6 +12,9 @@ test('supported goals become explicit completion criteria', () => {
   });
   assert.equal(criteriaFromGoal('Show the balance', member), null);
   assert.equal(criteriaFromGoal('Transfer money from checking', member), null);
+  assert.equal(criteriaFromGoal('Show checking or savings transactions for the last 7 days', member), null);
+  assert.equal(criteriaFromGoal('Show checking transactions for the last 7 or 14 days', member), null);
+  assert.equal(criteriaFromGoal("Don't show checking transactions for the last 7 days", member), null);
 });
 
 test('model decisions require the strict action envelope', () => {

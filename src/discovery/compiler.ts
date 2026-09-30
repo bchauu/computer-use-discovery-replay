@@ -52,9 +52,10 @@ export function compileTransactionHistoryArtifact(
   compiledAt = new Date().toISOString(),
 ): CapabilityArtifact {
   if (run.status !== 'succeeded' || !run.result) throw new Error('DISCOVERY_NOT_SUCCESSFUL');
+  if (evidence.some(item => item.runId !== run.runId)) throw new Error('EVIDENCE_RUN_MISMATCH');
+  if (evidence.some(item => item.execution.status === 'failed_unknown_effect')) throw new Error('UNKNOWN_ACTION_EFFECT_IN_EVIDENCE');
   const executed = evidence.filter(item => item.execution.status === 'executed');
   if (!executed.length) throw new Error('NO_EXECUTED_EVIDENCE');
-  if (executed.some(item => item.runId !== run.runId)) throw new Error('EVIDENCE_RUN_MISMATCH');
   if (executed.some(item => !item.after)) throw new Error('POST_ACTION_EVIDENCE_MISSING');
   if (executed.some(item => item.action.kind === 'fill')) throw new Error('UNSUPPORTED_PERSISTED_FILL');
   const discoveryInputs = inputsFromCriteria(run.criteria);
@@ -120,7 +121,11 @@ export function compileTransactionHistoryArtifact(
     steps,
     outputs: {
       account: { kind: 'account_context', fields: ['accountType', 'accountLastFour'] },
-      transactions: { kind: 'table', columns: ['postedDate', 'description', 'reference', 'status', 'debit', 'credit'] },
+      transactions: {
+        kind: 'table',
+        columns: ['postedDate', 'description', 'reference', 'status', 'debit', 'credit'],
+        pagination: { kind: 'next_button', accessibleName: 'Next', maxPages: 20 },
+      },
     },
     completion: {
       all: [

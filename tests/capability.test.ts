@@ -68,7 +68,7 @@ test('successful evidence compiles to a strict parameterized draft artifact', ()
   const artifact = compileTransactionHistoryArtifact({
     runId, status: 'succeeded', result: { code: 'COMPLETION_VERIFIED', message: 'done' },
     criteria: { memberId: '12345', memberName: 'Alex Morgan', accountType: 'Checking', view: 'transaction_history', period: '7' },
-  }, [evidence(1, 'click'), evidence(2, 'select'), evidence(3, 'click', 'not_executed'), evidence(4, 'click', 'failed_unknown_effect')], 'gpt-4o-mini', '2026-09-29T12:00:00.000Z');
+  }, [evidence(1, 'click'), evidence(2, 'select'), evidence(3, 'click', 'not_executed')], 'gpt-4o-mini', '2026-09-29T12:00:00.000Z');
 
   assert.equal(capabilityArtifactSchema.safeParse(artifact).success, true);
   assert.equal(artifact.status, 'draft');
@@ -85,6 +85,7 @@ test('compiler rejects unsuccessful runs and persisted fill actions', () => {
   };
   assert.throws(() => compileTransactionHistoryArtifact(run, [evidence(1, 'click')], 'gpt-4o-mini'), /DISCOVERY_NOT_SUCCESSFUL/);
   assert.throws(() => compileTransactionHistoryArtifact({ ...run, status: 'succeeded' }, [evidence(1, 'fill')], 'gpt-4o-mini'), /UNSUPPORTED_PERSISTED_FILL/);
+  assert.throws(() => compileTransactionHistoryArtifact({ ...run, status: 'succeeded' }, [evidence(1, 'click', 'failed_unknown_effect')], 'gpt-4o-mini'), /UNKNOWN_ACTION_EFFECT_IN_EVIDENCE/);
 });
 
 test('file catalog never downgrades a validated artifact when a later draft is registered', async () => {

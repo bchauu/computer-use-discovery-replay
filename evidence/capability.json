@@ -182,7 +182,12 @@
         "status",
         "debit",
         "credit"
-      ]
+      ],
+      "pagination": {
+        "kind": "next_button",
+        "accessibleName": "Next",
+        "maxPages": 20
+      }
     }
   },
   "completion": {

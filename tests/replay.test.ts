@@ -78,7 +78,8 @@ function render() {
   if (route === '/transactions') {
     app.innerHTML = member + '<h1>Transaction inquiry</h1><table><tbody><tr><td>Everyday Checking</td><td><a href="#/members/12345/accounts/a101/history">View history</a></td></tr></tbody></table>';
   } else if (route.includes('/history')) {
-    app.innerHTML = member + '<p class="eyebrow">Account services / Checking</p><h1>Everyday Checking •••• 4821</h1><h2>Posted transaction history</h2><label for="period">History period</label><select id="period"><option value="30">Last 30 days</option><option value="14">Last 14 days</option><option value="7">Last 7 days</option><option value="latest">Latest posted transaction</option></select><table><tbody><tr><td>Sep 28, 2026</td><td><strong>Payroll</strong><small>TX-100001</small></td><td>Posted</td><td>—</td><td>$2,450.00</td></tr></tbody></table>';
+    app.innerHTML = member + '<p class="eyebrow">Account services / Checking</p><h1>Everyday Checking •••• 4821</h1><h2>Posted transaction history</h2><label for="period">History period</label><select id="period"><option value="30">Last 30 days</option><option value="14">Last 14 days</option><option value="7">Last 7 days</option><option value="latest">Latest posted transaction</option></select><table><tbody id="history-rows"><tr><td>Sep 28, 2026</td><td><strong>Payroll</strong><small>TX-100001</small></td><td>Posted</td><td>—</td><td>$2,450.00</td></tr></tbody></table><span id="page-status" role="status">Showing 1–1 of 2 transactions</span><button id="next" type="button">Next</button>';
+    document.getElementById('next').addEventListener('click', () => { document.getElementById('history-rows').innerHTML = '<tr><td>Sep 27, 2026</td><td><strong>Market</strong><small>TX-100002</small></td><td>Posted</td><td>$84.32</td><td>—</td></tr>'; document.getElementById('page-status').textContent = 'Showing 2–2 of 2 transactions'; document.getElementById('next').disabled = true; });
   } else {
     app.innerHTML = member + '<h1>Member overview</h1><a href="#/transactions">Transactions</a>';
   }
@@ -86,7 +87,7 @@ function render() {
 addEventListener('hashchange', render); render();
 </script></body></html>`;
 
-async function runThroughDispatcher(status: 'draft' | 'validated') {
+async function runThroughDispatcher(status: 'draft' | 'validated', registeredArtifact = artifact) {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext();
   await context.route('http://app.local/**', route => route.fulfill({ status: 200, contentType: 'text/html', body: html }));
@@ -95,7 +96,7 @@ async function runThroughDispatcher(status: 'draft' | 'validated') {
   const database = mongoose.createConnection();
   const catalogDirectory = await mkdtemp(path.join(tmpdir(), 'capability-catalog-'));
   const catalog = new CapabilityCatalog(database, catalogDirectory);
-  await catalog.register(capabilityArtifactSchema.parse({ ...artifact, status }));
+  await catalog.register(capabilityArtifactSchema.parse({ ...registeredArtifact, status }));
   const replay = new ReplayController(database, catalog);
   const dispatcher = new ExecutionDispatcher(null, replay, catalog);
   const session: LiveSession = {
@@ -124,8 +125,28 @@ test('validated artifact is selected and replays through the dispatcher without 
   assert.equal(run.result?.code, 'REPLAY_SUCCEEDED');
   assert.deepEqual(run.result?.output?.account, { accountType: 'checking', accountLastFour: '4821' });
   assert.equal(run.result?.output?.transactions[0]?.reference, 'TX-100001');
+  assert.equal(run.result?.output?.transactions[1]?.reference, 'TX-100002');
+  assert.equal(run.events.some(event => event.code === 'OUTPUT_PAGE_ADVANCED'), true);
   assert.equal(run.artifact?.path, null);
   assert.equal(run.events.some(event => event.type === 'model_request'), false);
+});
+
+test('bounded pagination fails explicitly instead of returning a partial output', async () => {
+  const onePageArtifact = capabilityArtifactSchema.parse({
+    ...artifact,
+    outputs: {
+      ...artifact.outputs,
+      transactions: {
+        ...artifact.outputs.transactions,
+        pagination: { ...artifact.outputs.transactions.pagination, maxPages: 1 },
+      },
+    },
+  });
+  const run = await runThroughDispatcher('validated', onePageArtifact);
+  assert.equal(run.status, 'failed');
+  assert.equal(run.result?.code, 'OUTPUT_PAGE_LIMIT_EXCEEDED');
+  assert.equal(run.result?.diagnostic?.phase, 'completion');
+  assert.equal(run.result?.output, null);
 });
 
 test('draft artifact uses validation replay and promotes after a different input succeeds', async () => {
@@ -278,7 +299,8 @@ test('runtime matrix distinguishes recovery, intervention, business outcomes, dr
   assert.equal(notice.run.status, 'succeeded');
   assert.equal(notice.run.events.some(event => event.code === 'AUTHORED_RECOVERY_EXECUTED'), true);
   const permission = await runFaultScenario('permission');
-  assert.equal(permission.run.status, 'awaiting_human');
+  assert.equal(permission.run.status, 'failed');
+  assert.equal(permission.run.result?.category, 'intervention');
   assert.equal(permission.run.result?.code, 'PERMISSION_DENIED');
   const appError = await runFaultScenario('app_error');
   assert.equal(appError.run.result?.code, 'APPLICATION_ERROR');

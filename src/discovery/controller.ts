@@ -130,10 +130,7 @@ export class DiscoveryController {
         }
         if (runtime.kind === 'intervention') {
           const diagnostic = await failureDiagnostic({ run, page: session.page, phase: 'pre_action', stepId: null, effectState: 'not_attempted', routeTemplate: null, expectedHeadings: [], recoveryReason: runtime.resumable ? 'Human intervention is required.' : 'No safe automated recovery is declared.' });
-          run.status = 'awaiting_human'; run.finishedAt = new Date().toISOString();
-          run.result = { category: 'intervention', code: runtime.code, message: 'Discovery encountered a state requiring human intervention.', output: null, diagnostic };
-          await telemetry.record(eventInput('run_finished', runtime.code, step));
-          return;
+          return await this.finish(run, telemetry, evidence, 'failed', runtime.code, 'Discovery encountered a state requiring operator review.', 'intervention', diagnostic);
         }
         if (runtime.kind === 'hard_failure' || runtime.kind === 'loading') {
           const diagnostic = await failureDiagnostic({ run, page: session.page, phase: 'pre_action', stepId: null, effectState: 'not_attempted', routeTemplate: null, expectedHeadings: [], recoveryAttempted: runtime.kind === 'loading', recoveryReason: runtime.kind === 'loading' ? 'The bounded loading wait expired.' : 'The application reported a terminal error.' });
@@ -212,11 +209,7 @@ export class DiscoveryController {
           continue;
         }
         if (action.kind === 'request_human') {
-          run.status = 'awaiting_human';
-          run.finishedAt = new Date().toISOString();
-          run.result = { category: 'intervention', code: 'HUMAN_REQUESTED', message: action.purpose, output: null, diagnostic: null };
-          await telemetry.record(eventInput('run_finished', 'HUMAN_REQUESTED', step, { actionKind: action.kind, purpose: action.purpose }));
-          return;
+          return await this.finish(run, telemetry, evidence, 'failed', 'HUMAN_REQUESTED', action.purpose, 'intervention');
         }
         if (action.kind === 'complete') {
           const completion = await verifyCompletion(session.page, run.criteria);
@@ -253,8 +246,15 @@ export class DiscoveryController {
           await telemetry.record(eventInput('evidence', 'ACTION_FAILURE_EVIDENCE_RECORDED', step, {
             actionKind: action.kind, observationRevision: observation.revision, stateHash: after?.stateHash ?? observation.stateHash,
           }));
-          recent.push({ action: `${action.kind}:${action.targetRef ?? ''}`, result: 'ACTION_FAILED_UNKNOWN_EFFECT' });
-          continue;
+          return await this.finish(
+            run, telemetry, evidence, 'failed', 'ACTION_EFFECT_UNKNOWN',
+            'Discovery stopped because the attempted action may already have taken effect.', 'hard_failure',
+            await failureDiagnostic({
+              run, page: session.page, phase: 'action', stepId: null,
+              effectState: 'attempted_effect_unknown', routeTemplate: null, expectedHeadings: [],
+              recoveryReason: 'The action threw after dispatch; discovery will not speculate or issue another action.',
+            }),
+          );
         }
         const durationMs = Math.round(performance.now() - actionStarted);
         await telemetry.record(eventInput('action', result.code, step, {

@@ -97,7 +97,7 @@ Replay data path:
 1. Resolve exact artifact version, validate schema/hash, bind and validate invocation inputs, and check adapter compatibility.
 2. Create a fresh session for an independent invocation; handoffs within that run preserve that session.
 3. Evaluate entry preconditions, execute each action through the same gate/adapter, and evaluate declared transitions.
-4. Return success with typed outputs, a declared business outcome, or a structured failure. An intervention suspends the run until resolved or expired.
+4. Return success with typed outputs, a declared business outcome, or a structured failure. Only an intervention with an implemented recovery and resume checkpoint suspends the run; other intervention-class conditions terminate with an operator-review result.
 5. Persist only sanitized evidence. Replay imports no model client and receives no API key.
 
 Artifacts are reusable flow definitions. Session state and run evidence are separate. Resuming an API conversation does not restore a lost browser session.
@@ -187,7 +187,7 @@ type RunResult =
       expected?: string; observed?: SanitizedObservation; evidenceId: string };
 ```
 
-Validate success payloads against the capability's output schema. `awaiting_human` is a nonterminal run state with an intervention ID, not a success or final failure. CLI exit codes and API status handling should distinguish business results from engine errors.
+Validate success payloads against the capability's output schema. `awaiting_human` is a nonterminal run state only when a live handoff and deterministic resume checkpoint exist. CLI exit codes and API status handling should distinguish business results from engine errors.
 
 | Condition | Classification | Action |
 |---|---|---|
@@ -196,7 +196,7 @@ Validate success payloads against the capability's output schema. `awaiting_huma
 | No matching member | Business outcome | Return `MEMBER_NOT_FOUND`; no retry |
 | Permission denied | Declared caller-visible outcome if in contract, otherwise hard failure | Stop; never try alternate privileges |
 | Known informational dialog | Recoverable | Dismiss using explicit predicate/action, once, then re-observe |
-| Unexpected dialog | Blocked | Pause and request human intervention |
+| Unexpected dialog | Intervention-class failure | Stop with safe context; this slice has no general dialog handoff |
 | Expired session | Recoverable through intervention | Human re-authenticates in same session; verify checkpoint |
 | Slow loading | Recoverable within budget | Poll declared readiness predicate; optionally retry a read-safe action |
 | Application error | Hard failure or narrowly declared transient | Bounded retry only if classified and safe |
@@ -212,7 +212,7 @@ There is no exactly-once guarantee for arbitrary UI writes. MVP commits are bloc
 
 ## 8. Orchestration and human control
 
-Run states: `created → running → succeeded | business_outcome | failed | cancelled`, with `running → pausing → awaiting_human → human_control → validating_resume → running` for intervention.
+Run states: `created → running → succeeded | business_outcome | failed | cancelled`. The implemented expired-session recovery adds `running → awaiting_human → human_control → validating_resume → running`; intervention-class conditions without a declared relay and resume checkpoint terminate as `failed` with category `intervention`.
 
 Session state includes `sessionId`, `runId`, browser context/page reference, current step/checkpoint, owner (`automation`, `human`, or `none`), monotonic ownership epoch, and in-flight command status.
 
@@ -385,7 +385,7 @@ evidence/
 .env.example
 ```
 
-Foundation and focused test scripts are declared in `package.json`; see `../README.md` for setup and verification status. Managed discovery starts from the operator console. Catalog replay and synthetic handoff are available through `npm run replay:catalog` and `npm run handoff:system`. Reviewed evidence export is not implemented yet.
+Foundation and focused test scripts are declared in `package.json`; see `../README.md` for setup and verification status. Managed discovery starts from the operator console. Catalog replay and synthetic handoff are available through `npm run replay:catalog` and `npm run handoff:system`. `npm run evidence:export` rebuilds the schema-validated, sanitized evidence bundle and its hash manifest from retained runs.
 
 Keep this detailed plan separate from the concise final `REPORT.md`. Write the report from what was actually implemented and observed, including cuts and limits.
 

@@ -8,7 +8,7 @@ import { verifyCompletion } from './completion.ts';
 import { observe } from './observer.ts';
 import type { LiveSession } from './sessions.ts';
 import { eventInput, RunTelemetry } from './telemetry.ts';
-import { evaluateReplayPolicy } from './policy.ts';
+import { evaluateExtractionPaginationPolicy, evaluateReplayPolicy } from './policy.ts';
 import { classifyRuntime, failureDiagnostic } from './runtime.ts';
 import type { CapabilityInputs, ExecutionMode, PublicRun, RunResultCategory, TransactionOutput } from './types.ts';
 import type { Connection } from 'mongoose';
@@ -90,20 +90,65 @@ async function waitForStepOutcome(page: Page, artifact: CapabilityArtifact, inpu
   return { checkpoint, condition: { kind: 'ready', code: 'READY' } as const };
 }
 
-async function extractOutput(page: Page, inputs: CapabilityInputs): Promise<TransactionOutput> {
+async function extractOutput(
+  page: Page,
+  inputs: CapabilityInputs,
+  artifact: CapabilityArtifact,
+  run: PublicRun,
+  telemetry: RunTelemetry,
+  allowedOrigin: string,
+): Promise<TransactionOutput> {
   const heading = await page.locator('h1').first().innerText();
   const accountLastFour = heading.match(/(\d{4})\s*$/)?.[1] ?? '';
   if (!accountLastFour) throw new Error('ACCOUNT_OUTPUT_MISSING');
-  const transactions = await page.locator('table tbody tr').evaluateAll(rows => rows.map(row => {
-    const cells = Array.from(row.querySelectorAll('td'));
-    const description = cells[1]?.querySelector('strong')?.textContent?.trim() ?? '';
-    const reference = cells[1]?.querySelector('small')?.textContent?.trim() ?? '';
-    const value = (index: number) => cells[index]?.textContent?.trim() ?? '';
-    return {
-      postedDate: value(0), description, reference, status: value(2),
-      debit: value(3) === '—' ? null : value(3), credit: value(4) === '—' ? null : value(4),
-    };
-  }));
+  const pagination = artifact.outputs.transactions.pagination;
+  const transactions: Array<{ postedDate: string; description: string; reference: string; status: string; debit: string | null; credit: string | null }> = [];
+  const references = new Set<string>();
+  const states = new Set<string>();
+  for (let pageNumber = 1; pageNumber <= pagination.maxPages; pageNumber += 1) {
+    const rows = await page.locator('table tbody tr').evaluateAll(elements => elements.map(row => {
+      const cells = Array.from(row.querySelectorAll('td'));
+      const description = cells[1]?.querySelector('strong')?.textContent?.trim() ?? '';
+      const reference = cells[1]?.querySelector('small')?.textContent?.trim() ?? '';
+      const value = (index: number) => cells[index]?.textContent?.trim() ?? '';
+      return {
+        postedDate: value(0), description, reference, status: value(2),
+        debit: value(3) === '—' ? null : value(3), credit: value(4) === '—' ? null : value(4),
+      };
+    }));
+    for (const row of rows) {
+      if (references.has(row.reference)) throw new Error('DUPLICATE_TRANSACTION_REFERENCE');
+      references.add(row.reference);
+      transactions.push(row);
+    }
+    const next = page.getByRole('button', { name: pagination.accessibleName, exact: true });
+    const nextCount = await next.count();
+    if (nextCount === 0) break;
+    if (nextCount !== 1) throw new Error('OUTPUT_PAGINATION_AMBIGUOUS');
+    if (await next.isDisabled()) break;
+    if (pageNumber === pagination.maxPages) throw new Error('OUTPUT_PAGE_LIMIT_EXCEEDED');
+    const policy = await evaluateExtractionPaginationPolicy(page, next, allowedOrigin, pagination.accessibleName);
+    await telemetry.record(eventInput('policy', policy.code, run.step, {
+      attempt: pageNumber, actionKind: 'click', targetRef: `button:${pagination.accessibleName}`,
+      purpose: `${policy.message} Policy ${policy.version}.`,
+    }));
+    if (!policy.ok) throw new Error(policy.code);
+    const state = rows.map(row => row.reference).join('|');
+    if (states.has(state)) throw new Error('OUTPUT_PAGINATION_REPEATED_STATE');
+    states.add(state);
+    await next.click({ timeout: 5000 });
+    await telemetry.record(eventInput('action', 'OUTPUT_PAGE_ADVANCED', run.step, {
+      attempt: pageNumber, actionKind: 'click', targetRef: `button:${pagination.accessibleName}`,
+      purpose: 'Read the next declared page of transaction output.',
+    }));
+    const deadline = Date.now() + 5000;
+    let nextState = state;
+    while (nextState === state && Date.now() < deadline) {
+      await page.waitForTimeout(100);
+      nextState = (await page.locator('table tbody tr td:nth-child(2) small').allTextContents()).map(value => value.trim()).join('|');
+    }
+    if (nextState === state) throw new Error('OUTPUT_PAGINATION_NO_PROGRESS');
+  }
   if (transactions.some(row => !row.postedDate || !row.description || !row.reference || !row.status)) throw new Error('TRANSACTION_OUTPUT_INCOMPLETE');
   return transactionOutputSchema.parse({ account: { accountType: inputs.accountType, accountLastFour }, transactions });
 }
@@ -121,6 +166,7 @@ export class ReplayController {
     resolve: (outcome: 'resumed' | 'cancelled' | 'timeout') => void;
     timer: ReturnType<typeof setTimeout>;
     claimed: boolean;
+    humanActionInFlight: boolean;
   }>();
 
   constructor(database: Connection, catalog: CapabilityCatalog) {
@@ -183,24 +229,30 @@ export class ReplayController {
     const handoff = this.handoffs.get(runId);
     if (!run || !handoff || handoff.session !== session || !handoff.claimed || run.status !== 'awaiting_human') return 'not_available' as const;
     if (session.owner !== 'human' || session.epoch !== expectedEpoch) return 'stale_epoch' as const;
-    if (command.kind === 'fill') {
-      if (command.label !== 'Employee PIN' || !command.value || command.value.length > 120) return 'command_denied' as const;
-      const target = session.page.getByLabel(command.label, { exact: true });
+    if (handoff.humanActionInFlight) return 'command_in_flight' as const;
+    handoff.humanActionInFlight = true;
+    try {
+      if (command.kind === 'fill') {
+        if (command.label !== 'Employee PIN' || !command.value || command.value.length > 120) return 'command_denied' as const;
+        const target = session.page.getByLabel(command.label, { exact: true });
+        if (await target.count() !== 1) return 'target_invalid' as const;
+        await target.fill(command.value);
+        await handoff.telemetry.record(eventInput('handoff', 'HUMAN_SENSITIVE_FILL_EXECUTED', run.step, {
+          actionKind: 'fill', targetRef: 'label:Employee PIN', purpose: 'Human entered a sensitive reauthentication value.',
+        }));
+        return 'accepted' as const;
+      }
+      if (command.name !== 'Re-authenticate') return 'command_denied' as const;
+      const target = session.page.getByRole('button', { name: command.name, exact: true });
       if (await target.count() !== 1) return 'target_invalid' as const;
-      await target.fill(command.value);
-      await handoff.telemetry.record(eventInput('handoff', 'HUMAN_SENSITIVE_FILL_EXECUTED', run.step, {
-        actionKind: 'fill', targetRef: 'label:Employee PIN', purpose: 'Human entered a sensitive reauthentication value.',
+      await target.click();
+      await handoff.telemetry.record(eventInput('handoff', 'HUMAN_CLICK_EXECUTED', run.step, {
+        actionKind: 'click', targetRef: 'button:Re-authenticate', purpose: 'Human submitted reauthentication.',
       }));
       return 'accepted' as const;
+    } finally {
+      handoff.humanActionInFlight = false;
     }
-    if (command.name !== 'Re-authenticate') return 'command_denied' as const;
-    const target = session.page.getByRole('button', { name: command.name, exact: true });
-    if (await target.count() !== 1) return 'target_invalid' as const;
-    await target.click();
-    await handoff.telemetry.record(eventInput('handoff', 'HUMAN_CLICK_EXECUTED', run.step, {
-      actionKind: 'click', targetRef: 'button:Re-authenticate', purpose: 'Human submitted reauthentication.',
-    }));
-    return 'accepted' as const;
   }
 
   async resumeHandoff(runId: string, session: LiveSession, expectedEpoch: number) {
@@ -208,6 +260,7 @@ export class ReplayController {
     const handoff = this.handoffs.get(runId);
     if (!run || !handoff || handoff.session !== session || !handoff.claimed || run.status !== 'awaiting_human') return 'not_available' as const;
     if (session.owner !== 'human' || session.epoch !== expectedEpoch) return 'stale_epoch' as const;
+    if (handoff.humanActionInFlight) return 'command_in_flight' as const;
     const checkpoint = await verifyCheckpoint(session.page, handoff.artifact, run.inputs, run.criteria, handoff.step);
     if (!checkpoint.ok) {
       await handoff.telemetry.record(eventInput('handoff', 'RESUME_CHECKPOINT_REJECTED', run.step));
@@ -235,7 +288,7 @@ export class ReplayController {
         this.handoffs.delete(run.runId);
         resolve('timeout');
       }, 300_000);
-      this.handoffs.set(run.runId, { session, telemetry, step, artifact, resolve, timer, claimed: false });
+      this.handoffs.set(run.runId, { session, telemetry, step, artifact, resolve, timer, claimed: false, humanActionInFlight: false });
     });
     await telemetry.record(eventInput('handoff', 'REAUTHENTICATION_REQUIRED', run.step));
     return outcome;
@@ -278,7 +331,7 @@ export class ReplayController {
           }
           if (precondition.kind === 'intervention') {
             const diagnostic = await failureDiagnostic({ run, page: session.page, phase: 'pre_action', stepId: step.id, effectState: 'not_attempted', routeTemplate: step.checkpoint.routeTemplate, expectedHeadings: step.checkpoint.requiredHeadings, recoveryReason: precondition.resumable ? 'Human intervention is required.' : 'No safe automated recovery is declared.' });
-            return await this.finish(run, telemetry, 'awaiting_human', precondition.code, 'Replay encountered a state that requires human intervention.', null, 'intervention', diagnostic);
+            return await this.finish(run, telemetry, 'failed', precondition.code, 'Replay stopped for operator review because no deterministic recovery is declared.', null, 'intervention', diagnostic);
           }
           if (precondition.kind === 'hard_failure' || precondition.kind === 'loading') {
             const code = precondition.kind === 'loading' ? 'LOADING_TIMEOUT' : precondition.code;
@@ -352,7 +405,7 @@ export class ReplayController {
           }
           if (outcome.condition.kind === 'intervention') {
             const diagnostic = await failureDiagnostic({ run, page: session.page, phase: 'checkpoint', stepId: step.id, effectState: 'attempted_effect_unknown', routeTemplate: step.checkpoint.routeTemplate, expectedHeadings: step.checkpoint.requiredHeadings, recoveryReason: outcome.condition.resumable ? 'Human intervention is required.' : 'No safe automated recovery is declared.' });
-            return await this.finish(run, telemetry, 'awaiting_human', outcome.condition.code, 'Replay encountered a state requiring human intervention.', null, 'intervention', diagnostic);
+            return await this.finish(run, telemetry, 'failed', outcome.condition.code, 'Replay stopped for operator review because no deterministic recovery is declared.', null, 'intervention', diagnostic);
           }
           if (outcome.condition.kind === 'hard_failure') {
             const diagnostic = await failureDiagnostic({ run, page: session.page, phase: 'checkpoint', stepId: step.id, effectState: 'attempted_effect_unknown', routeTemplate: step.checkpoint.routeTemplate, expectedHeadings: step.checkpoint.requiredHeadings, recoveryReason: 'The application reported a terminal error after the action.' });
@@ -370,7 +423,7 @@ export class ReplayController {
       await telemetry.record(eventInput('validation', completion.code, run.step));
       if (!completion.ok) return await this.finish(run, telemetry, 'failed', completion.code, completion.message, null);
       await telemetry.record(eventInput('validation', 'OUTPUT_EXTRACTION_STARTED', run.step));
-      const output = await extractOutput(session.page, run.inputs);
+      const output = await extractOutput(session.page, run.inputs, artifact, run, telemetry, session.allowedOrigin);
       await telemetry.record(eventInput('validation', 'OUTPUT_EXTRACTION_COMPLETE', run.step));
       const category = output.transactions.length ? 'success' : 'business_outcome';
       const code = output.transactions.length ? 'REPLAY_SUCCEEDED' : 'NO_TRANSACTIONS';
@@ -385,9 +438,29 @@ export class ReplayController {
       return await this.finish(run, telemetry, 'succeeded', code, completion.message, output, category);
     } catch (error) {
       const message = error instanceof Error ? error.message : '';
-      const code = /target page|browser.*closed|context.*closed/i.test(message) ? 'SESSION_LOST' : 'REPLAY_FAILED';
-      const diagnostic = await failureDiagnostic({ run, page: session.page, phase: 'session', stepId: artifact.steps[run.step - 1]?.id ?? null, effectState: 'attempted_effect_unknown', routeTemplate: artifact.steps[run.step - 1]?.checkpoint.routeTemplate ?? null, expectedHeadings: artifact.steps[run.step - 1]?.checkpoint.requiredHeadings ?? [], recoveryReason: code === 'SESSION_LOST' ? 'The live browser session was lost; replay never restarts it blindly.' : 'An unclassified execution error stopped replay.' });
-      return await this.finish(run, telemetry, 'failed', code, code === 'SESSION_LOST' ? 'The managed browser session became unavailable.' : 'Replay stopped after an execution error.', null, 'hard_failure', diagnostic);
+      const sessionLost = /target page|browser.*closed|context.*closed/i.test(message);
+      const declaredOutputFailure = /^(OUTPUT_|DUPLICATE_TRANSACTION_REFERENCE|ACCOUNT_OUTPUT_|TRANSACTION_OUTPUT_|ROUTE_DENIED$|TARGET_EFFECT_DENIED$)/.test(message);
+      const code = sessionLost ? 'SESSION_LOST' : declaredOutputFailure ? message : 'REPLAY_FAILED';
+      const diagnostic = await failureDiagnostic({
+        run,
+        page: session.page,
+        phase: declaredOutputFailure ? 'completion' : 'session',
+        stepId: artifact.steps[run.step - 1]?.id ?? null,
+        effectState: declaredOutputFailure ? 'checkpoint_confirmed' : 'attempted_effect_unknown',
+        routeTemplate: artifact.steps[run.step - 1]?.checkpoint.routeTemplate ?? null,
+        expectedHeadings: artifact.steps[run.step - 1]?.checkpoint.requiredHeadings ?? [],
+        recoveryReason: sessionLost
+          ? 'The live browser session was lost; replay never restarts it blindly.'
+          : declaredOutputFailure
+            ? 'Output extraction violated a declared completeness or identity invariant.'
+            : 'An unclassified execution error stopped replay.',
+      });
+      const resultMessage = sessionLost
+        ? 'The managed browser session became unavailable.'
+        : declaredOutputFailure
+          ? `Replay stopped during verified output extraction: ${message}.`
+          : 'Replay stopped after an execution error.';
+      return await this.finish(run, telemetry, 'failed', code, resultMessage, null, 'hard_failure', diagnostic);
     }
   }
 

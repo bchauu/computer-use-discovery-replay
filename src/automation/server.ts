@@ -133,6 +133,7 @@ export function configureAutomation(app: express.Express, database: Connection, 
     const { expectedEpoch, ...command } = parsed.data;
     const outcome = await dispatcher!.executeHumanAction(run.runId, session, expectedEpoch, command);
     if (outcome === 'stale_epoch') return response.status(409).json({ code: 'STALE_OWNERSHIP_EPOCH' });
+    if (outcome === 'command_in_flight') return response.status(409).json({ code: 'HUMAN_COMMAND_IN_FLIGHT' });
     if (outcome === 'command_denied') return response.status(403).json({ code: 'HUMAN_ACTION_DENIED' });
     if (outcome === 'target_invalid') return response.status(422).json({ code: 'HUMAN_TARGET_INVALID' });
     if (outcome !== 'accepted') return response.status(409).json({ code: 'HANDOFF_NOT_AVAILABLE' });
@@ -148,6 +149,7 @@ export function configureAutomation(app: express.Express, database: Connection, 
     if (!session) return response.status(404).json({ code: 'RUN_NOT_FOUND' });
     const outcome = await dispatcher!.resumeHandoff(run.runId, session, parsed.data.expectedEpoch);
     if (outcome === 'stale_epoch') return response.status(409).json({ code: 'STALE_OWNERSHIP_EPOCH' });
+    if (outcome === 'command_in_flight') return response.status(409).json({ code: 'HUMAN_COMMAND_IN_FLIGHT' });
     if (outcome === 'checkpoint_failed') return response.status(422).json({ code: 'RESUME_CHECKPOINT_FAILED' });
     if (outcome !== 'accepted') return response.status(409).json({ code: 'HANDOFF_NOT_AVAILABLE' });
     return response.json({ runId: run.runId, status: 'running', owner: 'automation' });

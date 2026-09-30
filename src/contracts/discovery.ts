@@ -57,18 +57,21 @@ export interface VerifiedMemberContext { id: string; name: string }
 
 export function criteriaFromGoal(goal: string, member: VerifiedMemberContext): SuccessCriteria | null {
   const normalized = goal.toLowerCase();
-  const accountType = normalized.includes('checking') ? 'Checking' : normalized.includes('saving') ? 'Savings' : null;
+  const accountMatches = [
+    /\bchecking\b/.test(normalized) ? 'Checking' as const : null,
+    /\bsavings?\b/.test(normalized) ? 'Savings' as const : null,
+  ].filter((value): value is 'Checking' | 'Savings' => value !== null);
+  if (accountMatches.length !== 1) return null;
+  const accountType = accountMatches[0]!;
   const asksForTransactions = /transaction|history|activity/.test(normalized);
-  const period = /latest|last transaction|most recent/.test(normalized)
-    ? 'latest'
-    : /\b7\s*(day|days)\b/.test(normalized)
-      ? '7'
-      : /\b14\s*(day|days)\b/.test(normalized)
-        ? '14'
-        : /\b30\s*(day|days)\b/.test(normalized)
-          ? '30'
-          : null;
-  if (!accountType || !asksForTransactions || !period) return null;
+  if (!asksForTransactions || /\b(?:do not|don't|not|without)\b.{0,40}\b(?:transactions?|history|activity)\b/.test(normalized)) return null;
+  const numericPeriods = [...new Set([...normalized.matchAll(/\b(7|14|30)\b/g)].map(match => match[1] as '7' | '14' | '30'))];
+  const periodMatches: Array<'latest' | '7' | '14' | '30'> = [
+    ...(/\b(?:latest|last transaction|most recent)\b/.test(normalized) ? ['latest' as const] : []),
+    ...numericPeriods,
+  ];
+  if (periodMatches.length !== 1) return null;
+  const period = periodMatches[0]!;
   return successCriteriaSchema.parse({ memberId: member.id, memberName: member.name, accountType, view: 'transaction_history', period });
 }
 

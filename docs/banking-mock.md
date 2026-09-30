@@ -1,6 +1,6 @@
 # Employee banking mock
 
-This increment implements the target application only. The fictional Northline staff workspace is separate from the future automation feature and does not perform any model calls.
+The fictional Northline staff workspace is the synthetic target application. Manual use does not perform model calls; the automation service controls it only when an employee launches a discovery or replay run.
 
 ## Open it
 
@@ -39,7 +39,7 @@ This is a navigable baseline with accessible controls, not yet a difficult legac
 - `npm run typecheck` and `npm run build`: frontend/backend compilation.
 - `npm run test:bank-ui`: Playwright manual-flow checks against the running mock. This is a UI regression test, not genuine LLM discovery evidence.
 
-The six data tests and production build pass. In-app browser checks verified the pre-verification deep-link gate, name/DOB lookup, wrong/correct last four, Accounts/Transactions member-context reuse, history navigation, changing members followed by browser Back, and clearing verification on refresh. A leading-zero last-four value was also exercised in the browser. Previous history checks covered 7/14/30-day filtering, pagination reset, and Latest mode. The updated standalone Playwright script has not been executed in the restricted agent shell.
+The six data tests, production build, and standalone Playwright browser check pass. Browser checks verified the pre-verification deep-link gate, name/DOB lookup, wrong/correct last four, Accounts/Transactions member-context reuse, history navigation, changing members followed by browser Back, clearing verification on refresh, and a leading-zero last-four value. History checks cover 7/14/30-day filtering, pagination reset, and Latest mode. Deterministic automation additionally verifies that a 30-day result traverses both pages and extracts all 14 matching transactions.
 
 ## Automation integration
 

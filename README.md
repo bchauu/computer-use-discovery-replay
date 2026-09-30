@@ -22,7 +22,7 @@ flowchart LR
     Dispatch -->|Draft or validated artifact| Replay[Deterministic replay]
     Inputs[Invocation inputs] --> Replay
     Replay --> Result[Verified output or explicit outcome]
-    Replay --> Intervention[Pause and request intervention]
+    Replay --> Intervention[Supported resumable intervention]
     Intervention --> Human[Human operates the same session]
     Human --> Check[Verify resume checkpoint]
     Check --> Replay
@@ -90,7 +90,7 @@ npm run test:bank-ui
 The remaining commands configure the broader system. Prerequisites are Node.js 22.22.x and npm 10+. MongoDB is optional for this local slice; validated files provide the catalog and evidence fallback. No OpenAI key is needed for replay or the banking mock; a new genuine discovery requires one.
 
 ```sh
-npm install
+npm ci
 cp .env.example .env
 npm run browser:install
 ```
@@ -135,13 +135,13 @@ npm run browser:check
 
 The combined dev script supports macOS/Linux. On Windows, run the four `dev:*` scripts separately. The local MongoDB helper uses port 27018 and `.local/mongo`; it does not modify an existing instance on port 27017. It is a standalone development server, so multi-document transactions will require a replica-set deployment when that feature is introduced.
 
-See [setup status and troubleshooting](docs/setup.md) for verification limits. Once a lockfile is generated and committed, clean checkouts should use `npm ci`. Live discovery requires an authorized API key and run budget; build and automated tests do not invoke a model.
+See [setup status and troubleshooting](docs/setup.md) for verification limits. Live discovery requires an authorized API key and run budget; build and automated tests do not invoke a model.
 
 ## Evidence and limitations
 
 A genuine GPT-4o mini run has now operated the real local React banking UI with the fixed 500 ms post-action render delay. It used three model calls (3,636 input tokens and 162 output tokens) to open transaction inquiry, choose Alex Morgan’s checking account, and select seven-day history. Independent verification compiled a three-step draft. A 14-day validation replay extracted eight transactions, promoted the artifact, and emitted zero model-request events.
 
-A separate process verified Jordan Lee, parsed the differently worded request “checking account activity for the last 14 days,” selected the persisted capability, and replayed it against checking account ending `7150`. It extracted two transactions with zero model requests. The runtime suite also retained missing-account and no-transaction business outcomes, slow-load and known-notice recovery, permission intervention, and application failure.
+A separate process verified Jordan Lee, parsed the differently worded request “checking account activity for the last 14 days,” selected the persisted capability, and replayed it against checking account ending `7150`. It extracted two transactions with zero model requests. A 30-day replay traversed the target's second results page and extracted all 14 matching transactions. The runtime suite also retained missing-account and no-transaction business outcomes, slow-load and known-notice recovery, permission intervention, and application failure.
 
 The reviewed bundle under [`evidence/`](evidence/) contains the genuine discovery, model-free replays, runtime outcomes, and latest same-session handoff. Its manifest labels provenance, hashes exported files, and records successful API-key and PIN-canary scans. The HTTP integration additionally verifies token enforcement, exclusive ownership, premature-resume rejection, and stale/late command fencing.
 
