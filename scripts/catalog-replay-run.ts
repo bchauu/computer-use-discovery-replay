@@ -5,10 +5,23 @@ import { publicRunSchema } from '../src/contracts/run.ts';
 import { CapabilityCatalog } from '../src/discovery/catalog.ts';
 import { ExecutionDispatcher } from '../src/discovery/dispatcher.ts';
 import { ReplayController } from '../src/discovery/replay.ts';
+import { ensureAutomationIndexes } from '../src/discovery/storage.ts';
 import type { LiveSession } from '../src/discovery/sessions.ts';
 
 const target = process.env.BANK_TARGET_URL || 'http://127.0.0.1:5174/#/members';
 const database = mongoose.createConnection();
+const databaseUri = process.env.AUTOMATION_MONGODB_URI?.trim();
+let mongoConnected = false;
+if (databaseUri) {
+  try {
+    await database.openUri(databaseUri, { serverSelectionTimeoutMS: 10_000 });
+    await database.db!.admin().ping();
+    await ensureAutomationIndexes(database);
+    mongoConnected = true;
+  } catch {
+    console.warn('Catalog replay will use local files only because MongoDB is unavailable.');
+  }
+}
 const browser = await chromium.launch({ headless: process.env.DISCOVERY_HEADLESS !== 'false' });
 const context = await browser.newContext();
 const page = await context.newPage();
@@ -33,13 +46,16 @@ try {
   const run = await dispatcher.start(session, 'Show checking account activity for the last 14 days.');
   runId = run.runId;
   const deadline = Date.now() + 60_000;
-  while (['created', 'running'].includes(run.status) && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 50));
+  while ((['created', 'running'].includes(run.status) || session.activeRunId === run.runId) && Date.now() < deadline) {
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
   const result = publicRunSchema.parse(run);
   if (result.status !== 'succeeded' || result.mode !== 'replay') {
     throw new Error(`CATALOG_REPLAY_FAILED:${JSON.stringify({ runId: result.runId, status: result.status, mode: result.mode, result: result.result })}`);
   }
   console.log(JSON.stringify({
     scenario: 'cross_process_catalog_replay',
+    mongoConnected,
     runId: result.runId,
     mode: result.mode,
     status: result.status,

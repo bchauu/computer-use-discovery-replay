@@ -1,6 +1,6 @@
 {
-  "runId": "810849d0-f8e9-491c-9d30-b3af5675005a",
-  "sessionId": "963bf202-e721-4ce9-8b13-c93563eb2392",
+  "runId": "9420a99a-78ec-4ca0-8f9e-bb2f495d7605",
+  "sessionId": "aa9860d9-45a9-4c81-8ccb-5b352454ce49",
   "mode": "replay",
   "status": "failed",
   "goalSummary": "Checking transaction history · last 7 days",
@@ -17,8 +17,8 @@
   },
   "step": 2,
   "maxSteps": 8,
-  "startedAt": "2026-09-30T15:24:36.541Z",
-  "finishedAt": "2026-09-30T15:24:36.799Z",
+  "startedAt": "2026-09-30T16:58:23.805Z",
+  "finishedAt": "2026-09-30T16:58:24.083Z",
   "result": {
     "category": "hard_failure",
     "code": "APPLICATION_ERROR",
@@ -48,7 +48,7 @@
         "ruleId": null,
         "reason": "The application reported a terminal error after the action."
       },
-      "evidenceRef": ".local/runs/810849d0-f8e9-491c-9d30-b3af5675005a/events.jsonl"
+      "evidenceRef": ".local/runs/9420a99a-78ec-4ca0-8f9e-bb2f495d7605/events.jsonl"
     }
   },
   "artifact": {
@@ -59,11 +59,11 @@
   },
   "events": [
     {
-      "eventId": "8710ef27-cf93-4758-bb99-47a373a0a93b",
-      "runId": "810849d0-f8e9-491c-9d30-b3af5675005a",
-      "sessionId": "963bf202-e721-4ce9-8b13-c93563eb2392",
+      "eventId": "067ec3ae-1b39-48d0-b2a2-633c3fdc236b",
+      "runId": "9420a99a-78ec-4ca0-8f9e-bb2f495d7605",
+      "sessionId": "aa9860d9-45a9-4c81-8ccb-5b352454ce49",
       "sequence": 1,
-      "timestamp": "2026-09-30T15:24:36.541Z",
+      "timestamp": "2026-09-30T16:58:23.805Z",
       "type": "run_started",
       "step": 0,
       "attempt": 1,
@@ -80,11 +80,11 @@
       "outputTokens": null
     },
     {
-      "eventId": "8553596a-16af-452b-a559-8b433371688a",
-      "runId": "810849d0-f8e9-491c-9d30-b3af5675005a",
-      "sessionId": "963bf202-e721-4ce9-8b13-c93563eb2392",
+      "eventId": "f486bedc-2559-47e7-ac0b-d1be4453ddff",
+      "runId": "9420a99a-78ec-4ca0-8f9e-bb2f495d7605",
+      "sessionId": "aa9860d9-45a9-4c81-8ccb-5b352454ce49",
       "sequence": 2,
-      "timestamp": "2026-09-30T15:24:36.557Z",
+      "timestamp": "2026-09-30T16:58:23.824Z",
       "type": "observation",
       "step": 1,
       "attempt": 1,
@@ -101,11 +101,11 @@
       "outputTokens": null
     },
     {
-      "eventId": "70fc9039-dc24-4081-8f5d-7dac77df2239",
-      "runId": "810849d0-f8e9-491c-9d30-b3af5675005a",
-      "sessionId": "963bf202-e721-4ce9-8b13-c93563eb2392",
+      "eventId": "6589a3fe-dd06-4a67-8f07-eaf5a2e3d5b3",
+      "runId": "9420a99a-78ec-4ca0-8f9e-bb2f495d7605",
+      "sessionId": "aa9860d9-45a9-4c81-8ccb-5b352454ce49",
       "sequence": 3,
-      "timestamp": "2026-09-30T15:24:36.558Z",
+      "timestamp": "2026-09-30T16:58:23.826Z",
       "type": "validation",
       "step": 1,
       "attempt": 1,
@@ -122,11 +122,11 @@
       "outputTokens": null
     },
     {
-      "eventId": "9da31c51-7d61-4fa7-a0bb-60a0ac165f6a",
-      "runId": "810849d0-f8e9-491c-9d30-b3af5675005a",
-      "sessionId": "963bf202-e721-4ce9-8b13-c93563eb2392",
+      "eventId": "255dce69-19d6-4bbd-93f8-e071a8649f69",
+      "runId": "9420a99a-78ec-4ca0-8f9e-bb2f495d7605",
+      "sessionId": "aa9860d9-45a9-4c81-8ccb-5b352454ce49",
       "sequence": 4,
-      "timestamp": "2026-09-30T15:24:36.561Z",
+      "timestamp": "2026-09-30T16:58:23.831Z",
       "type": "policy",
       "step": 1,
       "attempt": 1,
@@ -143,15 +143,15 @@
       "outputTokens": null
     },
     {
-      "eventId": "8333f43f-777b-4107-8958-220ec54ea172",
-      "runId": "810849d0-f8e9-491c-9d30-b3af5675005a",
-      "sessionId": "963bf202-e721-4ce9-8b13-c93563eb2392",
+      "eventId": "4960809f-163c-4173-9245-cc974f72232d",
+      "runId": "9420a99a-78ec-4ca0-8f9e-bb2f495d7605",
+      "sessionId": "aa9860d9-45a9-4c81-8ccb-5b352454ce49",
       "sequence": 5,
-      "timestamp": "2026-09-30T15:24:36.566Z",
+      "timestamp": "2026-09-30T16:58:23.840Z",
       "type": "action",
       "step": 1,
       "attempt": 1,
-      "durationMs": 5,
+      "durationMs": 8,
       "code": "ACTION_EXECUTED",
       "actionKind": "click",
       "targetRef": null,
@@ -164,11 +164,11 @@
       "outputTokens": null
     },
     {
-      "eventId": "4b4bd03d-6d1f-4b28-983e-ddaafe40bd9b",
-      "runId": "810849d0-f8e9-491c-9d30-b3af5675005a",
-      "sessionId": "963bf202-e721-4ce9-8b13-c93563eb2392",
+      "eventId": "42c364ca-dd2a-42c5-a9c3-324ea17d68f3",
+      "runId": "9420a99a-78ec-4ca0-8f9e-bb2f495d7605",
+      "sessionId": "aa9860d9-45a9-4c81-8ccb-5b352454ce49",
       "sequence": 6,
-      "timestamp": "2026-09-30T15:24:36.672Z",
+      "timestamp": "2026-09-30T16:58:23.947Z",
       "type": "validation",
       "step": 1,
       "attempt": 1,
@@ -185,11 +185,11 @@
       "outputTokens": null
     },
     {
-      "eventId": "677296ed-3a7c-4c1f-bdbe-69b5a2647233",
-      "runId": "810849d0-f8e9-491c-9d30-b3af5675005a",
-      "sessionId": "963bf202-e721-4ce9-8b13-c93563eb2392",
+      "eventId": "75e5b62b-b188-4a62-a1e4-ea4874d9828b",
+      "runId": "9420a99a-78ec-4ca0-8f9e-bb2f495d7605",
+      "sessionId": "aa9860d9-45a9-4c81-8ccb-5b352454ce49",
       "sequence": 7,
-      "timestamp": "2026-09-30T15:24:36.678Z",
+      "timestamp": "2026-09-30T16:58:23.955Z",
       "type": "observation",
       "step": 2,
       "attempt": 1,
@@ -206,11 +206,11 @@
       "outputTokens": null
     },
     {
-      "eventId": "b1b0f757-b489-4027-99ee-9120aa000c82",
-      "runId": "810849d0-f8e9-491c-9d30-b3af5675005a",
-      "sessionId": "963bf202-e721-4ce9-8b13-c93563eb2392",
+      "eventId": "3719a7cf-bcff-425f-a748-e02c3fe18e15",
+      "runId": "9420a99a-78ec-4ca0-8f9e-bb2f495d7605",
+      "sessionId": "aa9860d9-45a9-4c81-8ccb-5b352454ce49",
       "sequence": 8,
-      "timestamp": "2026-09-30T15:24:36.680Z",
+      "timestamp": "2026-09-30T16:58:23.958Z",
       "type": "validation",
       "step": 2,
       "attempt": 1,
@@ -227,11 +227,11 @@
       "outputTokens": null
     },
     {
-      "eventId": "2ef145db-ab39-40c5-8dbb-97230d3a8de4",
-      "runId": "810849d0-f8e9-491c-9d30-b3af5675005a",
-      "sessionId": "963bf202-e721-4ce9-8b13-c93563eb2392",
+      "eventId": "7adffaa5-6fe2-4d41-972b-07f39445197d",
+      "runId": "9420a99a-78ec-4ca0-8f9e-bb2f495d7605",
+      "sessionId": "aa9860d9-45a9-4c81-8ccb-5b352454ce49",
       "sequence": 9,
-      "timestamp": "2026-09-30T15:24:36.682Z",
+      "timestamp": "2026-09-30T16:58:23.964Z",
       "type": "policy",
       "step": 2,
       "attempt": 1,
@@ -248,15 +248,15 @@
       "outputTokens": null
     },
     {
-      "eventId": "36107943-6f56-4195-89a4-853278b744cb",
-      "runId": "810849d0-f8e9-491c-9d30-b3af5675005a",
-      "sessionId": "963bf202-e721-4ce9-8b13-c93563eb2392",
+      "eventId": "f1348ccb-b0d1-4e95-84f5-39374952e9b4",
+      "runId": "9420a99a-78ec-4ca0-8f9e-bb2f495d7605",
+      "sessionId": "aa9860d9-45a9-4c81-8ccb-5b352454ce49",
       "sequence": 10,
-      "timestamp": "2026-09-30T15:24:36.691Z",
+      "timestamp": "2026-09-30T16:58:23.974Z",
       "type": "action",
       "step": 2,
       "attempt": 1,
-      "durationMs": 8,
+      "durationMs": 9,
       "code": "ACTION_EXECUTED",
       "actionKind": "click",
       "targetRef": null,
@@ -269,11 +269,11 @@
       "outputTokens": null
     },
     {
-      "eventId": "59b4b438-8380-47db-b232-a7c893f08b77",
-      "runId": "810849d0-f8e9-491c-9d30-b3af5675005a",
-      "sessionId": "963bf202-e721-4ce9-8b13-c93563eb2392",
+      "eventId": "e200e106-833d-465a-9397-b0e2588dfecd",
+      "runId": "9420a99a-78ec-4ca0-8f9e-bb2f495d7605",
+      "sessionId": "aa9860d9-45a9-4c81-8ccb-5b352454ce49",
       "sequence": 11,
-      "timestamp": "2026-09-30T15:24:36.797Z",
+      "timestamp": "2026-09-30T16:58:24.082Z",
       "type": "validation",
       "step": 2,
       "attempt": 1,
@@ -290,11 +290,11 @@
       "outputTokens": null
     },
     {
-      "eventId": "48ffc251-a361-40b8-957a-f7ee5b1afb5b",
-      "runId": "810849d0-f8e9-491c-9d30-b3af5675005a",
-      "sessionId": "963bf202-e721-4ce9-8b13-c93563eb2392",
+      "eventId": "6db3bbaa-41b7-4739-a57c-86d2e55dece1",
+      "runId": "9420a99a-78ec-4ca0-8f9e-bb2f495d7605",
+      "sessionId": "aa9860d9-45a9-4c81-8ccb-5b352454ce49",
       "sequence": 12,
-      "timestamp": "2026-09-30T15:24:36.799Z",
+      "timestamp": "2026-09-30T16:58:24.083Z",
       "type": "run_finished",
       "step": 2,
       "attempt": 1,

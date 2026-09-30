@@ -6,17 +6,17 @@ import { publicRunSchema } from '../src/contracts/run.ts';
 import { stabilitySummarySchema } from '../src/contracts/stability.ts';
 
 const selections = [
-  { name: 'discovery-live', runId: process.env.EVIDENCE_DISCOVERY_RUN || 'a5505818-dcf0-4c96-b0a2-a511c5df4541', provenance: 'genuine_openai' },
-  { name: 'validation-replay', runId: process.env.EVIDENCE_VALIDATION_RUN || '4dd6cc3d-f89d-4d67-9e85-3f6484e68494', provenance: 'live_model_free_replay' },
-  { name: 'cross-member-replay', runId: process.env.EVIDENCE_REPLAY_RUN || '7bf6303b-3bab-47af-a1d3-9c39bd42f1d2', provenance: 'live_model_free_replay' },
-  { name: 'full-pagination-replay', runId: process.env.EVIDENCE_PAGINATION_RUN || '13f1ce53-a8bb-4016-9e3f-d591b45c6ab6', provenance: 'live_model_free_replay' },
-  { name: 'session-expiry-handoff', runId: process.env.EVIDENCE_HANDOFF_RUN || '248dbea4-ab0e-4ae5-899a-07361d034642', provenance: 'injected_runtime_condition' },
-  { name: 'slow-load-recovery', runId: process.env.EVIDENCE_SLOW_RUN || 'c5e82c04-bf19-41e8-9568-df10a748ff3f', provenance: 'injected_runtime_condition' },
-  { name: 'known-notice-recovery', runId: process.env.EVIDENCE_NOTICE_RUN || '61c946ff-adc0-4a4e-b56a-bbb7222dcf1e', provenance: 'injected_runtime_condition' },
-  { name: 'permission-intervention', runId: process.env.EVIDENCE_PERMISSION_RUN || '97bce8d0-7268-4142-bc38-90e2e6f61101', provenance: 'injected_runtime_condition' },
-  { name: 'application-failure', runId: process.env.EVIDENCE_APP_ERROR_RUN || '810849d0-f8e9-491c-9d30-b3af5675005a', provenance: 'injected_runtime_condition' },
-  { name: 'account-not-found', runId: process.env.EVIDENCE_ACCOUNT_MISSING_RUN || '6a414baa-334c-4871-8b4c-dad12d8a9255', provenance: 'synthetic_business_outcome' },
-  { name: 'no-transactions', runId: process.env.EVIDENCE_NO_TRANSACTIONS_RUN || '4b7d40e2-3a18-4d68-9efc-aed58bda2b08', provenance: 'synthetic_business_outcome' },
+  { name: 'discovery-live', runId: process.env.EVIDENCE_DISCOVERY_RUN || 'a055664b-15ba-4caf-b65e-7d5bd529c967', provenance: 'genuine_openai' },
+  { name: 'validation-replay', runId: process.env.EVIDENCE_VALIDATION_RUN || 'a4295f92-1029-407c-bf0e-3e2d1aa900f6', provenance: 'live_model_free_replay' },
+  { name: 'cross-member-replay', runId: process.env.EVIDENCE_REPLAY_RUN || 'b4094048-60b7-4f7c-b201-088ab0ae395b', provenance: 'live_model_free_replay' },
+  { name: 'full-pagination-replay', runId: process.env.EVIDENCE_PAGINATION_RUN || '0c9e1962-cc19-49d7-bc10-7205d5f971c2', provenance: 'live_model_free_replay' },
+  { name: 'session-expiry-handoff', runId: process.env.EVIDENCE_HANDOFF_RUN || '26c148d7-78b5-4e22-bda8-a2617d5d6cb9', provenance: 'injected_runtime_condition' },
+  { name: 'slow-load-recovery', runId: process.env.EVIDENCE_SLOW_RUN || '54a51922-027c-403a-a5f3-ba5451f6dbbb', provenance: 'injected_runtime_condition' },
+  { name: 'known-notice-recovery', runId: process.env.EVIDENCE_NOTICE_RUN || '1a7a5ff5-43ac-4bd1-a960-3e78c97eba60', provenance: 'injected_runtime_condition' },
+  { name: 'permission-intervention', runId: process.env.EVIDENCE_PERMISSION_RUN || '8b4cd0f5-b4a9-4ea9-ac02-cef7ebe429db', provenance: 'injected_runtime_condition' },
+  { name: 'application-failure', runId: process.env.EVIDENCE_APP_ERROR_RUN || '9420a99a-78ec-4ca0-8f9e-bb2f495d7605', provenance: 'injected_runtime_condition' },
+  { name: 'account-not-found', runId: process.env.EVIDENCE_ACCOUNT_MISSING_RUN || '58d9657e-e0a1-44f6-8237-c50c8ced12df', provenance: 'synthetic_business_outcome' },
+  { name: 'no-transactions', runId: process.env.EVIDENCE_NO_TRANSACTIONS_RUN || 'a912ad07-8556-4196-9468-c9516a7239b8', provenance: 'synthetic_business_outcome' },
 ] as const;
 
 const root = path.resolve('evidence');

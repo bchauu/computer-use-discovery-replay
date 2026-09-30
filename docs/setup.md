@@ -24,7 +24,7 @@ The local standalone server is sufficient for the initial read-only target and f
 
 ## OpenAI
 
-The server uses the Responses API with strict Structured Outputs. `OPENAI_MODEL` defaults to `gpt-4o-mini` and remains configurable. Configure `OPENAI_API_KEY` only for an authorized live discovery run. Never expose secrets through Vite-prefixed variables. The first retained genuine run used three model calls, 3,636 input tokens, and 162 output tokens; its evidence contains no copy of the configured key.
+The server uses the Responses API with strict Structured Outputs. `OPENAI_MODEL` defaults to `gpt-4o-mini` and remains configurable. Configure `OPENAI_API_KEY` only for an authorized live discovery run. Never expose secrets through Vite-prefixed variables. The retained genuine run used three model calls, 3,636 input tokens, and 164 output tokens; its evidence contains no copy of the configured key.
 
 For an explicitly injected local wiring check, set `DISCOVERY_MODEL_MODE=mock` or run `npm run mock:system` while the banking UI is running. The mock provider uses the same discovery controller and strict action contract, but its choices are scripted and must never be described as genuine LLM discovery evidence. If `AUTOMATION_MONGODB_URI` is reachable, `mock:system` uses an isolated temporary database and removes it afterward; otherwise, it exercises the local-file fallback. It leaves reviewable local run evidence under `.local/runs/`.
 

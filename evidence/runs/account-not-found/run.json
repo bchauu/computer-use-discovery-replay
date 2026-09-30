@@ -1,6 +1,6 @@
 {
-  "runId": "6a414baa-334c-4871-8b4c-dad12d8a9255",
-  "sessionId": "1bc78e6d-1b87-440a-80f8-17ac2a48ca26",
+  "runId": "58d9657e-e0a1-44f6-8237-c50c8ced12df",
+  "sessionId": "c8fed394-8168-462e-9846-7c5162f2e60a",
   "mode": "replay",
   "status": "succeeded",
   "goalSummary": "Checking transaction history · last 7 days",
@@ -17,8 +17,8 @@
   },
   "step": 2,
   "maxSteps": 8,
-  "startedAt": "2026-09-30T15:24:37.288Z",
-  "finishedAt": "2026-09-30T15:24:37.431Z",
+  "startedAt": "2026-09-30T16:58:24.674Z",
+  "finishedAt": "2026-09-30T16:58:24.837Z",
   "result": {
     "category": "business_outcome",
     "code": "ACCOUNT_NOT_FOUND",
@@ -49,7 +49,7 @@
         "ruleId": null,
         "reason": "The verified member has no account matching the requested account type."
       },
-      "evidenceRef": ".local/runs/6a414baa-334c-4871-8b4c-dad12d8a9255/events.jsonl"
+      "evidenceRef": ".local/runs/58d9657e-e0a1-44f6-8237-c50c8ced12df/events.jsonl"
     }
   },
   "artifact": {
@@ -60,11 +60,11 @@
   },
   "events": [
     {
-      "eventId": "60d2fba8-e4be-425e-ad5c-c082bc3dbd69",
-      "runId": "6a414baa-334c-4871-8b4c-dad12d8a9255",
-      "sessionId": "1bc78e6d-1b87-440a-80f8-17ac2a48ca26",
+      "eventId": "f7335ef4-5f23-49a4-a36e-8a1e0f8f2e13",
+      "runId": "58d9657e-e0a1-44f6-8237-c50c8ced12df",
+      "sessionId": "c8fed394-8168-462e-9846-7c5162f2e60a",
       "sequence": 1,
-      "timestamp": "2026-09-30T15:24:37.288Z",
+      "timestamp": "2026-09-30T16:58:24.674Z",
       "type": "run_started",
       "step": 0,
       "attempt": 1,
@@ -81,11 +81,11 @@
       "outputTokens": null
     },
     {
-      "eventId": "4d1480a5-2512-4db3-82be-76adb269df74",
-      "runId": "6a414baa-334c-4871-8b4c-dad12d8a9255",
-      "sessionId": "1bc78e6d-1b87-440a-80f8-17ac2a48ca26",
+      "eventId": "b575ac01-be76-4d7e-bb22-0c604faef22c",
+      "runId": "58d9657e-e0a1-44f6-8237-c50c8ced12df",
+      "sessionId": "c8fed394-8168-462e-9846-7c5162f2e60a",
       "sequence": 2,
-      "timestamp": "2026-09-30T15:24:37.303Z",
+      "timestamp": "2026-09-30T16:58:24.694Z",
       "type": "observation",
       "step": 1,
       "attempt": 1,
@@ -102,11 +102,11 @@
       "outputTokens": null
     },
     {
-      "eventId": "f6f52849-5f92-4fa9-ae84-95dae0361044",
-      "runId": "6a414baa-334c-4871-8b4c-dad12d8a9255",
-      "sessionId": "1bc78e6d-1b87-440a-80f8-17ac2a48ca26",
+      "eventId": "58242c31-b89d-4397-a66e-42f7c65371df",
+      "runId": "58d9657e-e0a1-44f6-8237-c50c8ced12df",
+      "sessionId": "c8fed394-8168-462e-9846-7c5162f2e60a",
       "sequence": 3,
-      "timestamp": "2026-09-30T15:24:37.304Z",
+      "timestamp": "2026-09-30T16:58:24.698Z",
       "type": "validation",
       "step": 1,
       "attempt": 1,
@@ -123,11 +123,11 @@
       "outputTokens": null
     },
     {
-      "eventId": "dda9de4c-d576-4c15-b138-4fa6abe4fe43",
-      "runId": "6a414baa-334c-4871-8b4c-dad12d8a9255",
-      "sessionId": "1bc78e6d-1b87-440a-80f8-17ac2a48ca26",
+      "eventId": "cc1572ca-5838-4b83-ba5a-b438e65434fc",
+      "runId": "58d9657e-e0a1-44f6-8237-c50c8ced12df",
+      "sessionId": "c8fed394-8168-462e-9846-7c5162f2e60a",
       "sequence": 4,
-      "timestamp": "2026-09-30T15:24:37.307Z",
+      "timestamp": "2026-09-30T16:58:24.703Z",
       "type": "policy",
       "step": 1,
       "attempt": 1,
@@ -144,15 +144,15 @@
       "outputTokens": null
     },
     {
-      "eventId": "86ce5ecc-3db5-4f57-a93f-0b8ecd6a6860",
-      "runId": "6a414baa-334c-4871-8b4c-dad12d8a9255",
-      "sessionId": "1bc78e6d-1b87-440a-80f8-17ac2a48ca26",
+      "eventId": "1c42f9d4-a453-4681-98b0-d4d5dfd84382",
+      "runId": "58d9657e-e0a1-44f6-8237-c50c8ced12df",
+      "sessionId": "c8fed394-8168-462e-9846-7c5162f2e60a",
       "sequence": 5,
-      "timestamp": "2026-09-30T15:24:37.316Z",
+      "timestamp": "2026-09-30T16:58:24.716Z",
       "type": "action",
       "step": 1,
       "attempt": 1,
-      "durationMs": 9,
+      "durationMs": 12,
       "code": "ACTION_EXECUTED",
       "actionKind": "click",
       "targetRef": null,
@@ -165,11 +165,11 @@
       "outputTokens": null
     },
     {
-      "eventId": "6d788285-ba48-40dc-afb8-cb3e7392964a",
-      "runId": "6a414baa-334c-4871-8b4c-dad12d8a9255",
-      "sessionId": "1bc78e6d-1b87-440a-80f8-17ac2a48ca26",
+      "eventId": "1934c6bc-2b66-4e43-8880-5c714afc88d3",
+      "runId": "58d9657e-e0a1-44f6-8237-c50c8ced12df",
+      "sessionId": "c8fed394-8168-462e-9846-7c5162f2e60a",
       "sequence": 6,
-      "timestamp": "2026-09-30T15:24:37.422Z",
+      "timestamp": "2026-09-30T16:58:24.823Z",
       "type": "validation",
       "step": 1,
       "attempt": 1,
@@ -186,11 +186,11 @@
       "outputTokens": null
     },
     {
-      "eventId": "e66ffec9-89ed-4720-b5b6-fe85dc21e7ec",
-      "runId": "6a414baa-334c-4871-8b4c-dad12d8a9255",
-      "sessionId": "1bc78e6d-1b87-440a-80f8-17ac2a48ca26",
+      "eventId": "8190ccb4-da84-4177-9b48-410a048308b2",
+      "runId": "58d9657e-e0a1-44f6-8237-c50c8ced12df",
+      "sessionId": "c8fed394-8168-462e-9846-7c5162f2e60a",
       "sequence": 7,
-      "timestamp": "2026-09-30T15:24:37.427Z",
+      "timestamp": "2026-09-30T16:58:24.834Z",
       "type": "observation",
       "step": 2,
       "attempt": 1,
@@ -207,11 +207,11 @@
       "outputTokens": null
     },
     {
-      "eventId": "b01c9694-519b-4ac5-912f-0dc169ab91e7",
-      "runId": "6a414baa-334c-4871-8b4c-dad12d8a9255",
-      "sessionId": "1bc78e6d-1b87-440a-80f8-17ac2a48ca26",
+      "eventId": "47c5262e-791a-4fec-a904-8a76b9dcf4ed",
+      "runId": "58d9657e-e0a1-44f6-8237-c50c8ced12df",
+      "sessionId": "c8fed394-8168-462e-9846-7c5162f2e60a",
       "sequence": 8,
-      "timestamp": "2026-09-30T15:24:37.429Z",
+      "timestamp": "2026-09-30T16:58:24.835Z",
       "type": "validation",
       "step": 2,
       "attempt": 1,
@@ -228,11 +228,11 @@
       "outputTokens": null
     },
     {
-      "eventId": "ac2c2c9c-5490-4c80-99e4-1e12ea773c27",
-      "runId": "6a414baa-334c-4871-8b4c-dad12d8a9255",
-      "sessionId": "1bc78e6d-1b87-440a-80f8-17ac2a48ca26",
+      "eventId": "e5f596a4-cc58-4d82-a4f4-cc6839532b0e",
+      "runId": "58d9657e-e0a1-44f6-8237-c50c8ced12df",
+      "sessionId": "c8fed394-8168-462e-9846-7c5162f2e60a",
       "sequence": 9,
-      "timestamp": "2026-09-30T15:24:37.431Z",
+      "timestamp": "2026-09-30T16:58:24.837Z",
       "type": "run_finished",
       "step": 2,
       "attempt": 1,

@@ -36,9 +36,11 @@ const catalogDirectory = await mkdtemp(path.join(tmpdir(), 'injected-capability-
 let discoveryRunId: string | null = null;
 let replayRunId: string | null = null;
 
-async function waitForRun(run: PublicRun) {
+async function waitForRun(run: PublicRun, session: LiveSession) {
   const deadline = Date.now() + 30_000;
-  while (['created', 'running'].includes(run.status) && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 25));
+  while ((['created', 'running'].includes(run.status) || session.activeRunId === run.runId) && Date.now() < deadline) {
+    await new Promise(resolve => setTimeout(resolve, 25));
+  }
 }
 
 try {
@@ -65,7 +67,7 @@ try {
 
   const discoveryRun = await dispatcher.start(session, 'Show this member’s checking transactions for the last 7 days.');
   discoveryRunId = discoveryRun.runId;
-  await waitForRun(discoveryRun);
+  await waitForRun(discoveryRun, session);
   const discovered = publicRunSchema.parse(discoveryRun);
   if (discovered.status !== 'succeeded' || discovered.artifact?.status !== 'draft') {
     throw new Error(`INJECTED_DISCOVERY_FAILED:${JSON.stringify(discovered.result)}`);
@@ -73,7 +75,7 @@ try {
 
   const validationRun = await dispatcher.start(session, 'Show this member’s checking transactions for the last 14 days.');
   replayRunId = validationRun.runId;
-  await waitForRun(validationRun);
+  await waitForRun(validationRun, session);
   const replayed = publicRunSchema.parse(validationRun);
   if (replayed.status !== 'succeeded' || replayed.mode !== 'validation_replay' || replayed.artifact?.status !== 'validated') {
     throw new Error(`INJECTED_VALIDATION_REPLAY_FAILED:${JSON.stringify(replayed.result)}`);
