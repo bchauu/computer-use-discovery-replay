@@ -142,6 +142,7 @@ function AutomationShortcut({ member }: { member: Member }) {
     } catch (error) { setStatus(error instanceof Error ? error.message : 'Could not start automation.'); }
   }
   const running = ['created', 'running', 'awaiting_human'].includes(runStatus) || status === 'Starting automation…';
+  const navigating = ['created', 'running'].includes(runStatus) || status === 'Starting automation…';
   async function cancel() {
     if (!runId || !controlToken) return;
     setStatus('Cancelling…');
@@ -160,7 +161,9 @@ function AutomationShortcut({ member }: { member: Member }) {
       });
       const body = await response.json() as { epoch?: number; code?: string };
       if (!response.ok || !body.epoch) throw new Error(body.code || 'CLAIM_FAILED');
-      setHandoffEpoch(body.epoch); setStatus('Human control claimed. Re-authenticate this employee session.');
+      setHandoffEpoch(body.epoch); setStatus(runDetails.code === 'HUMAN_DECISION_REQUIRED'
+        ? 'Human control claimed. Review the unknown dialog and decide whether to proceed.'
+        : 'Human control claimed. Re-authenticate this employee session.');
     } catch (error) { setStatus(error instanceof Error ? error.message : 'Could not claim control'); }
   }
   async function reauthenticate(event: FormEvent) {
@@ -184,12 +187,29 @@ function AutomationShortcut({ member }: { member: Member }) {
       setHandoffEpoch(null); setStatus('Re-authenticated. Automation resumed.');
     } catch (error) { setStatus(error instanceof Error ? error.message : 'Could not resume automation'); }
   }
-  return <aside className="ai-shortcut" aria-label="AI navigation shortcut">
+  async function proceedAndResume() {
+    if (!runId || !controlToken || handoffEpoch === null) return;
+    const headers = { 'content-type': 'application/json', 'x-control-token': controlToken };
+    try {
+      const click = await fetch(`/automation-api/api/runs/${runId}/handoff/actions`, {
+        method: 'POST', headers, body: JSON.stringify({ expectedEpoch: handoffEpoch, kind: 'click', name: 'Proceed anyway' }),
+      });
+      if (!click.ok) throw new Error((await click.json() as { code?: string }).code || 'HUMAN_DECISION_RELAY_FAILED');
+      await new Promise(resolve => window.setTimeout(resolve, 500));
+      const resume = await fetch(`/automation-api/api/runs/${runId}/handoff/resume`, {
+        method: 'POST', headers, body: JSON.stringify({ expectedEpoch: handoffEpoch }),
+      });
+      if (!resume.ok) throw new Error((await resume.json() as { code?: string }).code || 'RESUME_FAILED');
+      setHandoffEpoch(null); setStatus('Human decision recorded. Automation resumed.');
+    } catch (error) { setStatus(error instanceof Error ? error.message : 'Could not resume automation'); }
+  }
+  return <aside className={`ai-shortcut${navigating ? ' navigating' : ''}`} aria-label="AI navigation shortcut">
     <div className="ai-title"><span aria-hidden="true">✦</span><div><strong>AI navigation</strong><small>{mode ? mode.replace('_', ' ') : 'Ready'} · Read-only</small></div></div>
     <form onSubmit={start}><label htmlFor="automation-goal">What does the customer need?</label><textarea id="automation-goal" required minLength={8} maxLength={500} disabled={running} value={goal} onChange={event => setGoal(event.target.value)} placeholder="Show this member’s checking transactions for the last 7 days."/><button className="button primary" disabled={running} type="submit">{running ? 'Navigating…' : 'Start automation'}</button>{running && <button className="button" type="button" onClick={cancel}>Cancel</button>}</form>
     <div className="ai-status" role="status"><strong>{status}</strong>{mode && <span>{mode.replace('_', ' ')}</span>}{step > 0 && <span>Step {step}</span>}</div>
     {runStatus === 'awaiting_human' && handoffEpoch === null && <button className="button handoff-button" type="button" onClick={claimControl}>Claim control</button>}
-    {runStatus === 'awaiting_human' && handoffEpoch !== null && <form className="handoff-form" onSubmit={reauthenticate} autoComplete="off"><label htmlFor="relay-employee-pin">Employee PIN</label><input id="relay-employee-pin" type="password" required value={employeePin} onChange={event => setEmployeePin(event.target.value)} autoComplete="off"/><button className="button primary" type="submit">Re-authenticate and resume</button></form>}
+    {runStatus === 'awaiting_human' && handoffEpoch !== null && runDetails.code === 'REAUTHENTICATION_REQUIRED' && <form className="handoff-form" onSubmit={reauthenticate} autoComplete="off"><label htmlFor="relay-employee-pin">Employee PIN</label><input id="relay-employee-pin" type="password" required value={employeePin} onChange={event => setEmployeePin(event.target.value)} autoComplete="off"/><button className="button primary" type="submit">Re-authenticate and resume</button></form>}
+    {runStatus === 'awaiting_human' && handoffEpoch !== null && runDetails.code === 'HUMAN_DECISION_REQUIRED' && <div className="handoff-form"><strong>Unknown dialog requires judgment</strong><p>Automation cannot approve this action. Proceed explicitly or cancel the run.</p><button className="button primary" type="button" onClick={proceedAndResume}>Proceed and resume</button><button className="button" type="button" onClick={cancel}>Cancel run</button></div>}
     {runDetails.code && <dl className="ai-result" aria-label="Run result">
       <div><dt>Outcome</dt><dd>{runDetails.category?.replace('_', ' ')} · {runDetails.code}</dd></div>
       <div><dt>Execution</dt><dd>{mode?.replace('_', ' ')} · {runDetails.modelRequests} model request{runDetails.modelRequests === 1 ? '' : 's'}</dd></div>
@@ -218,7 +238,7 @@ function SlowHistory({ onReady }: { onReady: () => void }) {
 function RuntimeFault({ scenario, onDismiss }: { scenario: string; onDismiss: () => void }) {
   if (scenario === 'permission-denied-on-history') return <header className="page-heading"><div><p className="eyebrow">Access control</p><h1>Permission denied</h1><p>Your employee role cannot access this account history.</p></div></header>;
   if (scenario === 'app-error-on-history') return <header className="page-heading"><div><p className="eyebrow">Application error</p><h1>Application unavailable</h1><p>The account-history service could not complete this request.</p></div></header>;
-  if (scenario === 'unknown-dialog-on-history') return <div className="runtime-dialog" role="dialog" aria-modal="true"><h2>Unexpected security message</h2><p>This injected dialog has no approved automated recovery.</p><button className="button">Proceed anyway</button></div>;
+  if (scenario === 'unknown-dialog-on-history') return <div className="runtime-dialog" role="dialog" aria-modal="true"><h2>Unexpected security message</h2><p>This injected dialog has no approved automated recovery.</p><button className="button" onClick={onDismiss}>Proceed anyway</button></div>;
   if (scenario === 'known-notice-on-history') return <div className="runtime-dialog" role="dialog" aria-modal="true"><h2>Scheduled maintenance notice</h2><p>Posted history remains available during this synthetic notice.</p><button className="button" onClick={onDismiss}>Dismiss notice</button></div>;
   return null;
 }

@@ -1,5 +1,7 @@
+import { timingSafeEqual } from 'node:crypto';
 import type express from 'express';
 import type { Connection } from 'mongoose';
+import { z } from 'zod';
 import { createSessionSchema, handoffEpochSchema, humanActionSchema, startRunSchema } from '../contracts/discovery.ts';
 import { publicRunSchema } from '../contracts/run.ts';
 import { CapabilityCatalog } from '../discovery/catalog.ts';
@@ -9,6 +11,7 @@ import { MockDecisionClient, OpenAIDecisionClient } from '../discovery/model.ts'
 import type { DecisionClient } from '../discovery/model.ts';
 import { readOnlyDiscoveryPolicy } from '../discovery/policy.ts';
 import { ReplayController } from '../discovery/replay.ts';
+import { getPersistedCapability, getPersistedEvidence, getPersistedRun, listPersistedRuns } from '../discovery/run-history.ts';
 import { SessionRegistry } from '../discovery/sessions.ts';
 import { ensureAutomationIndexes } from '../discovery/storage.ts';
 
@@ -29,10 +32,28 @@ function token(request: express.Request) {
   return value?.trim() || undefined;
 }
 
+function operatorAuthorization(request: express.Request, configuredToken: string | null) {
+  if (!configuredToken) return 'not_configured' as const;
+  const provided = request.header('x-operator-token')?.trim();
+  if (!provided) return 'denied' as const;
+  const actual = Buffer.from(provided);
+  const expected = Buffer.from(configuredToken);
+  return actual.length === expected.length && timingSafeEqual(actual, expected) ? 'accepted' as const : 'denied' as const;
+}
+
+function requireOperator(request: express.Request, response: express.Response, configuredToken: string | null) {
+  const authorization = operatorAuthorization(request, configuredToken);
+  if (authorization === 'accepted') return true;
+  if (authorization === 'not_configured') response.status(503).json({ code: 'OPERATOR_ACCESS_NOT_CONFIGURED' });
+  else response.status(401).json({ code: 'OPERATOR_ACCESS_DENIED' });
+  return false;
+}
+
 export function configureAutomation(app: express.Express, database: Connection, options: {
   sessionRegistry?: SessionRegistry;
   decisionClient?: DecisionClient | null;
   catalogDirectory?: string;
+  operatorAccessToken?: string | null;
 } = {}) {
   const initializeStorage = () => {
     void ensureAutomationIndexes(database)
@@ -43,6 +64,9 @@ export function configureAutomation(app: express.Express, database: Connection, 
   else database.once('connected', initializeStorage);
   const activeSessions = options.sessionRegistry ?? sessions;
   const activeModelClient = options.decisionClient === undefined ? modelClient : options.decisionClient;
+  const activeOperatorAccessToken = options.operatorAccessToken === undefined
+    ? process.env.OPERATOR_ACCESS_TOKEN?.trim() || null
+    : options.operatorAccessToken;
   const catalog = new CapabilityCatalog(database, options.catalogDirectory);
   const discovery = activeModelClient ? new DiscoveryController(database, activeModelClient, {
     maxSteps: numberEnv('DISCOVERY_MAX_STEPS', 40),
@@ -79,6 +103,65 @@ export function configureAutomation(app: express.Express, database: Connection, 
     const session = activeSessions.authorize(request.params.sessionId, token(request));
     if (!session) return response.status(404).json({ code: 'SESSION_NOT_FOUND' });
     return response.json({ sessionId: session.sessionId, owner: session.owner, epoch: session.epoch, activeRunId: session.activeRunId });
+  });
+
+  app.get('/api/operator/status', (_request, response) => response.json({
+    configured: Boolean(activeOperatorAccessToken),
+    persistence: database.readyState === 1 ? 'connected' : 'unavailable',
+  }));
+
+  app.get('/api/operator/runs', async (request, response, next) => {
+    if (!requireOperator(request, response, activeOperatorAccessToken)) return;
+    try {
+      const parsed = z.coerce.number().int().min(1).max(100).default(30).safeParse(request.query.limit);
+      if (!parsed.success) return response.status(400).json({ code: 'INVALID_LIMIT' });
+      return response.json({ runs: await listPersistedRuns(database, parsed.data) });
+    } catch (error) {
+      if (error instanceof Error && error.message === 'DATABASE_NOT_CONNECTED') return response.status(503).json({ code: 'PERSISTENCE_UNAVAILABLE' });
+      return next(error);
+    }
+  });
+
+  app.get('/api/operator/runs/:runId', async (request, response, next) => {
+    if (!requireOperator(request, response, activeOperatorAccessToken)) return;
+    const parsed = z.string().uuid().safeParse(request.params.runId);
+    if (!parsed.success) return response.status(400).json({ code: 'INVALID_RUN_ID' });
+    try {
+      const run = await getPersistedRun(database, parsed.data);
+      if (!run) return response.status(404).json({ code: 'RUN_NOT_FOUND' });
+      return response.json(run);
+    } catch (error) {
+      if (error instanceof Error && error.message === 'DATABASE_NOT_CONNECTED') return response.status(503).json({ code: 'PERSISTENCE_UNAVAILABLE' });
+      return next(error);
+    }
+  });
+
+  app.get('/api/operator/runs/:runId/evidence', async (request, response, next) => {
+    if (!requireOperator(request, response, activeOperatorAccessToken)) return;
+    const parsed = z.string().uuid().safeParse(request.params.runId);
+    if (!parsed.success) return response.status(400).json({ code: 'INVALID_RUN_ID' });
+    try {
+      const evidence = await getPersistedEvidence(database, parsed.data);
+      if (!evidence) return response.status(404).json({ code: 'RUN_NOT_FOUND' });
+      return response.json({ evidence });
+    } catch (error) {
+      if (error instanceof Error && error.message === 'DATABASE_NOT_CONNECTED') return response.status(503).json({ code: 'PERSISTENCE_UNAVAILABLE' });
+      return next(error);
+    }
+  });
+
+  app.get('/api/operator/capabilities/:artifactId', async (request, response, next) => {
+    if (!requireOperator(request, response, activeOperatorAccessToken)) return;
+    const parsed = z.string().regex(/^[a-z0-9][a-z0-9-]{1,119}$/).safeParse(request.params.artifactId);
+    if (!parsed.success) return response.status(400).json({ code: 'INVALID_ARTIFACT_ID' });
+    try {
+      const artifact = await getPersistedCapability(database, parsed.data);
+      if (!artifact) return response.status(404).json({ code: 'CAPABILITY_NOT_FOUND' });
+      return response.json(artifact);
+    } catch (error) {
+      if (error instanceof Error && error.message === 'DATABASE_NOT_CONNECTED') return response.status(503).json({ code: 'PERSISTENCE_UNAVAILABLE' });
+      return next(error);
+    }
   });
 
   app.post('/api/runs', async (request, response) => {

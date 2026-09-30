@@ -11,6 +11,7 @@ const selections = [
   { name: 'cross-member-replay', runId: process.env.EVIDENCE_REPLAY_RUN || 'b4094048-60b7-4f7c-b201-088ab0ae395b', provenance: 'live_model_free_replay' },
   { name: 'full-pagination-replay', runId: process.env.EVIDENCE_PAGINATION_RUN || '0c9e1962-cc19-49d7-bc10-7205d5f971c2', provenance: 'live_model_free_replay' },
   { name: 'session-expiry-handoff', runId: process.env.EVIDENCE_HANDOFF_RUN || '26c148d7-78b5-4e22-bda8-a2617d5d6cb9', provenance: 'injected_runtime_condition' },
+  { name: 'unknown-dialog-handoff', runId: process.env.EVIDENCE_DECISION_HANDOFF_RUN || '9e32589a-7477-4749-a888-0449d2665951', provenance: 'injected_runtime_condition' },
   { name: 'slow-load-recovery', runId: process.env.EVIDENCE_SLOW_RUN || '54a51922-027c-403a-a5f3-ba5451f6dbbb', provenance: 'injected_runtime_condition' },
   { name: 'known-notice-recovery', runId: process.env.EVIDENCE_NOTICE_RUN || '1a7a5ff5-43ac-4bd1-a960-3e78c97eba60', provenance: 'injected_runtime_condition' },
   { name: 'permission-intervention', runId: process.env.EVIDENCE_PERMISSION_RUN || '8b4cd0f5-b4a9-4ea9-ac02-cef7ebe429db', provenance: 'injected_runtime_condition' },

@@ -11,15 +11,15 @@ Verified locally on 2026-09-30. “Injected” means a deterministic condition i
 | R5 Actions and robust targets | Ordered actions, exact role/label strategies, cardinality, top-frame scope, effect declarations | Capability and ambiguity tests |
 | R6 Typed I/O and success | Parameter bindings, bounded pagination, extraction contract, checkpoints, independent completion | Validation, cross-member, and full-pagination replay evidence |
 | R7 Model-free replay | Replay controller imports no model transport | Replay evidence and the 20-run stability study have zero model-request events |
-| R8 Runtime conditions | Business outcomes, loading, known/unknown dialogs, permission, app error, expiry, ambiguity | Runtime integration test and exported scenario runs |
+| R8 Runtime conditions | Business outcomes, loading, known/unknown dialogs, permission, app error, expiry, ambiguity | Runtime integration test, both handoff system runs, and exported scenarios |
 | R9 Outcome taxonomy | Success, business outcome, intervention, hard failure, cancellation | Public run schema and scenario assertions |
 | R10 Failure diagnostics | Phase, step, effect state, expectations, sanitized observation, recovery decision, evidence ref | Application-failure evidence |
 | R11 Policy | Origin, route, surface, target semantics, expected effect, destination, discovery restrictions | Forbidden-destination and effectful-target tests |
 | R12 Sensitive data | Password omission, bounded sanitization, no raw HTML, reviewed export scan | Evidence manifest review fields and canary tests |
 | R13 Structured logs/evidence | JSONL event timeline, state hashes, action evidence, diagnostics, repeatability aggregate | Reviewed evidence bundle and `stability-summary.json` |
 | R14 Intervention context | Typed intervention result with step diagnostic and current structural state | Permission and expiry evidence |
-| R15 Same-session human control | Original page/context retained; sanitized human actions; checkpoint revalidation | Handoff system run and API test |
-| R16 Pause/cede/resume ownership | Exclusive owner, epoch fencing, stale/late command rejection | HTTP handoff integration test |
+| R15 Same-session human control | Original page/context retained; sanitized credential and judgment actions; checkpoint revalidation | Session-expiry and unknown-dialog system runs plus API tests |
+| R16 Pause/cede/resume ownership | Exclusive owner, epoch fencing, stale/late/wrong command rejection | Both HTTP handoff paths |
 | R17 Surface/tenant reuse design | Browser adapter scope, product profile and tenant-binding design, drift rejection | `REPORT.md` and implementation plan |
 
 ## Final local commands
@@ -37,7 +37,9 @@ npm run test:bank-ui
 npm run replay:catalog
 npm run runtime:system
 npm run handoff:system
+npm run handoff:decision
 npm run evidence:export
+npm run evidence:verify
 ```
 
 `npm run live:system` performs a new paid discovery and requires `OPENAI_API_KEY`. Existing reviewed discovery evidence is included, so ordinary replay and automated verification require neither an API key nor MongoDB.

@@ -130,3 +130,29 @@ export const publicRunSchema = z.object({
   events: z.array(telemetryEventSchema),
 }).strict();
 export type PublicRunContract = z.infer<typeof publicRunSchema>;
+
+export const runSummarySchema = z.object({
+  runId: z.string().uuid(),
+  mode: z.enum(['discovery', 'validation_replay', 'replay']),
+  status: z.enum(['created', 'running', 'awaiting_human', 'succeeded', 'failed', 'cancelled']),
+  goalSummary: nonemptyText,
+  memberName: nonemptyText,
+  startedAt: z.string().datetime(),
+  finishedAt: z.string().datetime().nullable(),
+  durationMs: z.number().int().nonnegative().nullable(),
+  category: z.enum(['success', 'business_outcome', 'intervention', 'hard_failure', 'cancelled']).nullable(),
+  resultCode: nonemptyText.nullable(),
+  modelRequestCount: z.number().int().nonnegative(),
+  inputTokens: z.number().int().nonnegative(),
+  outputTokens: z.number().int().nonnegative(),
+  retryCount: z.number().int().nonnegative(),
+  recoveryCount: z.number().int().nonnegative(),
+  handoffCount: z.number().int().nonnegative(),
+  eventCount: z.number().int().nonnegative(),
+  artifact: z.object({
+    artifactId: nonemptyText,
+    artifactVersion: z.number().int().positive(),
+    status: z.enum(['draft', 'validated', 'deprecated']),
+  }).strict().nullable(),
+}).strict();
+export type RunSummary = z.infer<typeof runSummarySchema>;

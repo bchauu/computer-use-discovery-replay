@@ -2,7 +2,7 @@
 
 ## Scope
 
-The project includes two React/Vite applications and two Express entry points, optional MongoDB connection handling, and verification scripts. The completed vertical slice adds a managed Playwright session, OpenAI discovery, strict action and policy validation, runtime classification, diagnostics, bounded recovery, safe local/Mongo telemetry, deterministic artifact compilation, capability dispatch, model-free replay, and same-session human control transfer.
+The project includes two React/Vite applications and two Express entry points, MongoDB-backed operator history, local evidence fallback, and verification scripts. The completed vertical slice adds a managed Playwright session, OpenAI discovery, strict action and policy validation, runtime classification, diagnostics, bounded recovery, safe local/Mongo telemetry, deterministic artifact compilation, capability dispatch, model-free replay, and same-session human control transfer.
 
 One root npm package keeps installation simple. `apps/operator` and `apps/bank` have independent Vite configurations. `src/automation` and `src/bank` start separate services; `src/shared` contains generic health and lifecycle wiring. No automated route can read bank data.
 
@@ -10,7 +10,7 @@ One root npm package keeps installation simple. `apps/operator` and `apps/bank` 
 
 The setup machine has Node 22.22.0, npm 10.9.4, and MongoDB Community 7.0.16. Dependencies have now been installed and `package-lock.json` generated. `npm ls --depth=0` confirms all declared packages are present. The Playwright Chromium executable is also present.
 
-Verified on 2026-09-30: strict TypeScript checking, the automated suite, server compilation, production builds, Chromium-driven discovery/replay integration, runtime-condition matrix, HTTP handoff integration, and the complete banking walkthrough pass. GPT-4o mini completed a genuine three-action discovery; separate processes replayed the persisted artifact with different inputs and members with zero model calls. The reviewed evidence exporter validates provenance and sensitive-value scans.
+Verified on 2026-09-30: strict TypeScript checking, 29 automated tests, server compilation, production builds, Chromium-driven discovery/replay integration, runtime-condition matrix, both HTTP handoff paths, and the complete banking walkthrough. GPT-4o mini completed a genuine three-action discovery; separate processes replayed the persisted artifact with different inputs and members with zero model calls. The reviewed evidence verifier validates schemas, provenance, hashes, and sensitive-value scans.
 
 Use `npm ci` for reproducible installs from the lockfile. No model calls were made during these checks.
 
@@ -19,6 +19,8 @@ Use `npm ci` for reproducible installs from the lockfile. No model calls were ma
 Copy `.env.example` to `.env` if it does not exist. `npm run db:local` starts an isolated MongoDB process on loopback port 27018 with project-local data under `.local/mongo`. Stop it with Ctrl+C. It does not use or alter another project's database. Only `AUTOMATION_MONGODB_URI` is required for persisted runs and capabilities; the synthetic bank UI uses bundled fixtures.
 
 Alternatively, point `AUTOMATION_MONGODB_URI` at a dedicated database in a hosted cluster. Reusing a development cluster is acceptable, but use a separate database name and preferably an application-scoped user. `npm run db:check` pings it without writing data and suppresses connection details on errors. `npm run persistence:system` then creates uniquely identified synthetic run and artifact records, reconnects and validates them plus the required indexes, and deletes only those temporary records.
+
+Set `OPERATOR_ACCESS_TOKEN` to a long random value to enable persisted history in the operator console. The protected endpoints require it as `x-operator-token`; the local console keeps it in `sessionStorage`. It is not a production identity system.
 
 The local standalone server is sufficient for the initial read-only target and foundation checks. It does not support multi-document transactions; introduce a replica set if the accepted persistence design requires them. Do not weaken consistency requirements merely to preserve the local topology.
 
@@ -39,8 +41,11 @@ The first-run defaults allow 40 actions, ten minutes overall, two minutes per mo
 - `npm run mock:system`: injected discovery → draft compilation → different-input model-free validation replay against the running real banking UI.
 - `npm run live:system`: genuine OpenAI discovery → draft compilation → different-period model-free validation replay against the running real banking UI.
 - `npm run handoff:system`: injected employee-session expiry → same-session human relay → checkpointed model-free resume.
+- `npm run handoff:decision`: injected unknown dialog → explicit human judgment → stale/wrong command rejection → checkpointed model-free resume.
 - `npm run stability:system`: repeated model-free replay across periods, members, pagination, and business outcomes; writes an ignored local aggregate under `.local/stability/`.
 - `npm run evidence:export`: reconstruct and scan the reviewed evidence bundle from retained local runs.
+- `npm run evidence:verify`: independently parse the checked-in bundle, verify every hash, prove model-free provenance, and scan for sensitive patterns.
+- `npm run demo:record`: record a silent product walkthrough using deterministic replay and the unknown-dialog handoff; requires MongoDB and the operator token.
 - `npm run persistence:system`: MongoDB write, reconnect, read, schema/index verification, and targeted cleanup using synthetic records.
 - `npm run build`: type-check, compile services, and build both React apps.
 - `npm run db:check`: read-only database connectivity check.

@@ -34,7 +34,7 @@ export const humanActionSchema = z.discriminatedUnion('kind', [
   }).strict(),
   handoffEpochSchema.extend({
     kind: z.literal('click'),
-    name: z.literal('Re-authenticate'),
+    name: z.enum(['Re-authenticate', 'Proceed anyway']),
   }).strict(),
 ]);
 

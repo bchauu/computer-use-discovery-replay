@@ -32,7 +32,7 @@ export async function classifyRuntime(page: Page): Promise<RuntimeCondition> {
   if (state.headings.includes('Permission denied')) return { kind: 'intervention', code: 'PERMISSION_DENIED', resumable: false };
   if (state.headings.includes('Application unavailable')) return { kind: 'hard_failure', code: 'APPLICATION_ERROR' };
   if (state.dialogs.some(text => text.includes('Scheduled maintenance notice'))) return { kind: 'recoverable', code: 'KNOWN_NOTICE', ruleId: 'dismiss-known-notice' };
-  if (state.dialogs.length) return { kind: 'intervention', code: 'UNKNOWN_DIALOG', resumable: false };
+  if (state.dialogs.length) return { kind: 'intervention', code: 'UNKNOWN_DIALOG', resumable: true };
   if (state.loading) return { kind: 'loading', code: 'PAGE_LOADING' };
   if (state.headings.includes('No matching accounts')) return { kind: 'business_outcome', code: 'ACCOUNT_NOT_FOUND' };
   if (state.headings.includes('No posted transactions')) return { kind: 'business_outcome', code: 'NO_TRANSACTIONS' };

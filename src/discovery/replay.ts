@@ -168,6 +168,7 @@ export class ReplayController {
     timer: ReturnType<typeof setTimeout>;
     claimed: boolean;
     humanActionInFlight: boolean;
+    interventionCode: 'SESSION_EXPIRED' | 'UNKNOWN_DIALOG';
   }>();
 
   constructor(database: Connection, catalog: CapabilityCatalog) {
@@ -234,7 +235,7 @@ export class ReplayController {
     handoff.humanActionInFlight = true;
     try {
       if (command.kind === 'fill') {
-        if (command.label !== 'Employee PIN' || !command.value || command.value.length > 120) return 'command_denied' as const;
+        if (handoff.interventionCode !== 'SESSION_EXPIRED' || command.label !== 'Employee PIN' || !command.value || command.value.length > 120) return 'command_denied' as const;
         const target = session.page.getByLabel(command.label, { exact: true });
         if (await target.count() !== 1) return 'target_invalid' as const;
         await target.fill(command.value);
@@ -243,12 +244,16 @@ export class ReplayController {
         }));
         return 'accepted' as const;
       }
-      if (command.name !== 'Re-authenticate') return 'command_denied' as const;
+      const allowedClick = handoff.interventionCode === 'SESSION_EXPIRED' ? 'Re-authenticate' : 'Proceed anyway';
+      if (command.name !== allowedClick) return 'command_denied' as const;
       const target = session.page.getByRole('button', { name: command.name, exact: true });
       if (await target.count() !== 1) return 'target_invalid' as const;
       await target.click();
       await handoff.telemetry.record(eventInput('handoff', 'HUMAN_CLICK_EXECUTED', run.step, {
-        actionKind: 'click', targetRef: 'button:Re-authenticate', purpose: 'Human submitted reauthentication.',
+        actionKind: 'click', targetRef: `button:${allowedClick}`,
+        purpose: handoff.interventionCode === 'SESSION_EXPIRED'
+          ? 'Human submitted reauthentication.'
+          : 'Human explicitly accepted the previously unknown dialog.',
       }));
       return 'accepted' as const;
     } finally {
@@ -278,20 +283,27 @@ export class ReplayController {
     return 'accepted' as const;
   }
 
-  private async requestHandoff(run: PublicRun, session: LiveSession, telemetry: RunTelemetry, artifact: CapabilityArtifact, step: ArtifactStep) {
+  private async requestHandoff(
+    run: PublicRun, session: LiveSession, telemetry: RunTelemetry, artifact: CapabilityArtifact, step: ArtifactStep,
+    interventionCode: 'SESSION_EXPIRED' | 'UNKNOWN_DIALOG',
+  ) {
     run.status = 'awaiting_human';
     run.result = {
-      category: 'intervention', code: 'REAUTHENTICATION_REQUIRED',
-      message: 'The employee session expired. Claim this live session, re-authenticate, and resume.', output: null, diagnostic: null,
+      category: 'intervention',
+      code: interventionCode === 'SESSION_EXPIRED' ? 'REAUTHENTICATION_REQUIRED' : 'HUMAN_DECISION_REQUIRED',
+      message: interventionCode === 'SESSION_EXPIRED'
+        ? 'The employee session expired. Claim this live session, re-authenticate, and resume.'
+        : 'An unknown dialog blocked replay. Claim this live session to proceed explicitly or cancel the run.',
+      output: null, diagnostic: null,
     };
     const outcome = new Promise<'resumed' | 'cancelled' | 'timeout'>(resolve => {
       const timer = setTimeout(() => {
         this.handoffs.delete(run.runId);
         resolve('timeout');
       }, 300_000);
-      this.handoffs.set(run.runId, { session, telemetry, step, artifact, resolve, timer, claimed: false, humanActionInFlight: false });
+      this.handoffs.set(run.runId, { session, telemetry, step, artifact, resolve, timer, claimed: false, humanActionInFlight: false, interventionCode });
     });
-    await telemetry.record(eventInput('handoff', 'REAUTHENTICATION_REQUIRED', run.step));
+    await telemetry.record(eventInput('handoff', interventionCode === 'SESSION_EXPIRED' ? 'REAUTHENTICATION_REQUIRED' : 'HUMAN_DECISION_REQUIRED', run.step));
     return outcome;
   }
 
@@ -395,8 +407,8 @@ export class ReplayController {
           const checkpoint = outcome.checkpoint;
           await telemetry.record(eventInput('validation', checkpoint.code, run.step, { attempt, actionKind: step.action.kind }));
           if (checkpoint.ok) { completed = true; break; }
-          if (outcome.condition.kind === 'intervention' && outcome.condition.code === 'SESSION_EXPIRED') {
-            const handoff = await this.requestHandoff(run, session, telemetry, artifact, step);
+          if (outcome.condition.kind === 'intervention' && ['SESSION_EXPIRED', 'UNKNOWN_DIALOG'].includes(outcome.condition.code)) {
+            const handoff = await this.requestHandoff(run, session, telemetry, artifact, step, outcome.condition.code as 'SESSION_EXPIRED' | 'UNKNOWN_DIALOG');
             if (handoff === 'cancelled') return await this.finish(run, telemetry, 'cancelled', 'RUN_CANCELLED', 'Replay was cancelled during human intervention.', null);
             if (handoff === 'timeout') return await this.finish(run, telemetry, 'failed', 'HANDOFF_TIMEOUT', 'Human intervention did not complete before its timeout.', null);
             const resumedCheckpoint = await waitForCheckpoint(session.page, artifact, run.inputs, run.criteria, step);

@@ -1,7 +1,29 @@
 # Reviewed evidence
 
-This directory contains schema-validated, sanitized evidence selected from local runs. `manifest.json` records provenance: `genuine_openai` is the paid discovery run, `live_model_free_replay` is deterministic Playwright replay, and `injected_runtime_condition` identifies deterministic conditions synthesized in the React target, including the session-expiry takeover.
+This bundle contains schema-validated, sanitized proof selected from local runs. [`manifest.json`](manifest.json) records provenance and SHA-256 hashes for every exported file.
 
-Run `npm run evidence:export` to reconstruct the 11-run bundle from the retained local run IDs and latest local stability study. The exporter parses every run, artifact, event, action-evidence record, and stability aggregate through public schemas, excludes raw HTML and screenshots, verifies that every non-model provenance class contains no model requests, and scans for OpenAI keys and the synthetic employee PIN canary before writing the manifest and hashes. The bundle includes a 30-day replay that crosses pagination and extracts all 14 matching transactions, plus a 20-run repeatability study with consistent per-scenario output hashes and zero model requests.
+| Run | Provenance | Expected result | What it proves |
+|---|---|---|---|
+| [Discovery](runs/discovery-live/run.json) | Genuine OpenAI | `DISCOVERY_SUCCEEDED` | GPT-4o mini operated the live React UI and produced executed action evidence |
+| [Validation replay](runs/validation-replay/run.json) | Live model-free | `REPLAY_SUCCEEDED` | Different period, zero model requests, draft promotion |
+| [Cross-member replay](runs/cross-member-replay/run.json) | Live model-free | `REPLAY_SUCCEEDED` | Persisted capability reused for a different verified member |
+| [Full pagination](runs/full-pagination-replay/run.json) | Live model-free | `REPLAY_SUCCEEDED` | All 14 matching transactions extracted across pages |
+| [Session expiry](runs/session-expiry-handoff/run.json) | Injected condition | `REPLAY_SUCCEEDED` | Same-session credential handoff and verified resume |
+| [Unknown dialog](runs/unknown-dialog-handoff/run.json) | Injected condition | `REPLAY_SUCCEEDED` | Human judgment, denied command, stale epoch, and verified resume |
+| [Slow loading](runs/slow-load-recovery/run.json) | Injected condition | `REPLAY_SUCCEEDED` | Bounded re-observation without repeating the navigation click |
+| [Known notice](runs/known-notice-recovery/run.json) | Injected condition | `REPLAY_SUCCEEDED` | Separately authored and recorded safe recovery |
+| [Permission denied](runs/permission-intervention/run.json) | Injected condition | `PERMISSION_DENIED` | Terminal intervention classification |
+| [Application failure](runs/application-failure/run.json) | Injected condition | `APPLICATION_ERROR` | Sanitized phase and effect-state diagnostic |
+| [Missing account](runs/account-not-found/run.json) | Synthetic outcome | `ACCOUNT_NOT_FOUND` | Expected business result, not a technical failure |
+| [Empty history](runs/no-transactions/run.json) | Synthetic outcome | `NO_TRANSACTIONS` | Verified empty result, not a technical failure |
 
-The checked-in evidence uses fictional Northline members and accounts. It contains no real banking connection or customer data.
+The bundle also includes the validated [`view-transaction-history` capability](capability.json) and a [20-run stability study](stability-summary.json). Every stability run produced its expected result, repeated scenarios had consistent output hashes, and the aggregate contains zero model requests.
+
+Provenance labels mean:
+
+- `genuine_openai`: a paid model made the discovery decisions.
+- `live_model_free_replay`: the deterministic interpreter operated the live UI without a model transport.
+- `injected_runtime_condition`: the React target deliberately produced a deterministic failure or interruption.
+- `synthetic_business_outcome`: fictional fixture data produced a legitimate domain result.
+
+Run `npm run evidence:verify` to reparse all records, check every manifest hash, confirm replay has no model events, and scan for raw HTML, API-key patterns, credential-bearing MongoDB URIs, and the synthetic PIN canary. Run `npm run evidence:export` to reconstruct the bundle from retained local run IDs. Exported examples use fictional Northline data and contain no real banking connection or customer information.

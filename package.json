@@ -31,9 +31,12 @@
     "live:system": "node --env-file-if-exists=.env --experimental-strip-types scripts/live-system-run.ts",
     "replay:catalog": "node --env-file-if-exists=.env --experimental-strip-types scripts/catalog-replay-run.ts",
     "handoff:system": "node --env-file-if-exists=.env --experimental-strip-types scripts/handoff-system-run.ts",
+    "handoff:decision": "node --env-file-if-exists=.env --experimental-strip-types scripts/decision-handoff-system-run.ts",
     "runtime:system": "node --env-file-if-exists=.env --experimental-strip-types scripts/runtime-system-run.ts",
     "stability:system": "node --env-file-if-exists=.env --experimental-strip-types scripts/stability-system-run.ts",
-    "evidence:export": "node --env-file-if-exists=.env --experimental-strip-types scripts/export-evidence.ts"
+    "evidence:export": "node --env-file-if-exists=.env --experimental-strip-types scripts/export-evidence.ts",
+    "evidence:verify": "node --experimental-strip-types scripts/verify-evidence.ts",
+    "demo:record": "node --env-file-if-exists=.env --experimental-strip-types scripts/record-demo.ts"
   },
   "dependencies": {
     "express": "5.2.1",

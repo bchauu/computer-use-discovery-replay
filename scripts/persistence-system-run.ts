@@ -6,6 +6,7 @@ import { capabilityArtifactSchema } from '../src/contracts/capability.ts';
 import { newId } from '../src/contracts/discovery.ts';
 import { publicRunSchema } from '../src/contracts/run.ts';
 import { CapabilityCatalog } from '../src/discovery/catalog.ts';
+import { getPersistedCapability, getPersistedRun, listPersistedRuns } from '../src/discovery/run-history.ts';
 import { ensureAutomationIndexes } from '../src/discovery/storage.ts';
 import { eventInput, RunTelemetry } from '../src/discovery/telemetry.ts';
 import type { PublicRun } from '../src/discovery/types.ts';
@@ -80,6 +81,9 @@ try {
   const { _id: _runId, createdAt: _createdAt, updatedAt: _updatedAt, ...storedRun } = storedRunDocument;
   const verifiedRun = publicRunSchema.parse(storedRun);
   if (verifiedRun.status !== 'succeeded' || verifiedRun.events.length !== 2) throw new Error('PERSISTED_RUN_INVALID');
+  const historyRun = await getPersistedRun(second, runId);
+  const history = await listPersistedRuns(second, 100);
+  if (!historyRun || !history.some(item => item.runId === runId && item.status === 'succeeded')) throw new Error('PERSISTED_HISTORY_NOT_QUERYABLE');
 
   const storedArtifactDocument = await second.collection('capabilityArtifacts').findOne({
     artifactId: artifact.artifactId,
@@ -89,6 +93,8 @@ try {
   if (!storedArtifactDocument) throw new Error('PERSISTED_ARTIFACT_NOT_FOUND');
   const { _id: _artifactId, ...storedArtifact } = storedArtifactDocument;
   const verifiedArtifact = capabilityArtifactSchema.parse(storedArtifact);
+  const historyArtifact = await getPersistedCapability(second, artifact.artifactId);
+  if (!historyArtifact || historyArtifact.status !== 'validated') throw new Error('PERSISTED_CAPABILITY_NOT_QUERYABLE');
   const runIndexes = await second.collection('discoveryRuns').indexes();
   const artifactIndexes = await second.collection('capabilityArtifacts').indexes();
   if (!runIndexes.some(index => index.name === 'discovery_run_id_unique')) throw new Error('RUN_INDEX_MISSING');
@@ -102,6 +108,7 @@ try {
     artifactId: verifiedArtifact.artifactId,
     artifactStatus: verifiedArtifact.status,
     indexesVerified: ['discovery_run_id_unique', 'capability_source_unique'],
+    historicalInspectorVerified: true,
     modelRequests: verifiedRun.events.filter(event => event.type === 'model_request').length,
   }, null, 2));
 } finally {

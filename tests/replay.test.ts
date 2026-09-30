@@ -250,7 +250,7 @@ function faultHtml(scenario: FaultScenario) {
     if (route === '/transactions') {
       if (scenario === 'permission') app.innerHTML = '<h1>Permission denied</h1>';
       else if (scenario === 'app_error') app.innerHTML = '<h1>Application unavailable</h1>';
-      else if (scenario === 'unknown_dialog') app.innerHTML = '<div role="dialog">Unexpected security message<button>Proceed anyway</button></div>';
+      else if (scenario === 'unknown_dialog') app.innerHTML = '<div role="dialog">Unexpected security message<button onclick="app.innerHTML=inquiry()">Proceed anyway</button></div>';
       else if (scenario === 'slow') { app.innerHTML = '<div class="runtime-loading" role="progressbar">Loading</div>'; setTimeout(() => { app.innerHTML = inquiry(); }, 350); }
       else app.innerHTML = inquiry();
     } else if (route.includes('/history')) {
@@ -305,8 +305,6 @@ test('runtime matrix distinguishes recovery, intervention, business outcomes, dr
   const appError = await runFaultScenario('app_error');
   assert.equal(appError.run.result?.code, 'APPLICATION_ERROR');
   assert.equal(appError.run.result?.diagnostic?.phase, 'checkpoint');
-  const unknown = await runFaultScenario('unknown_dialog');
-  assert.equal(unknown.run.result?.code, 'UNKNOWN_DIALOG');
   const ambiguous = await runFaultScenario('ambiguous');
   assert.equal(ambiguous.run.result?.code, 'TARGET_AMBIGUOUS');
   assert.equal(ambiguous.clicks, 0);
@@ -317,4 +315,53 @@ test('runtime matrix distinguishes recovery, intervention, business outcomes, dr
   assert.equal(missing.run.status, 'succeeded');
   assert.equal(missing.run.result?.category, 'business_outcome');
   assert.equal(missing.run.result?.code, 'ACCOUNT_NOT_FOUND');
+});
+
+test('unknown dialog pauses for an explicit human decision and resumes on the same session', async () => {
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext();
+  await context.route('http://app.local/**', route => route.fulfill({ status: 200, contentType: 'text/html', body: faultHtml('unknown_dialog') }));
+  const page = await context.newPage();
+  await page.goto('http://app.local/#/members/12345');
+  const database = mongoose.createConnection();
+  const catalogDirectory = await mkdtemp(path.join(tmpdir(), 'capability-catalog-'));
+  const catalog = new CapabilityCatalog(database, catalogDirectory);
+  await catalog.register(artifact);
+  const dispatcher = new ExecutionDispatcher(null, new ReplayController(database, catalog), catalog);
+  const session: LiveSession = {
+    sessionId: crypto.randomUUID(), controlToken: 'test-token', browser, context, page,
+    owner: 'human', epoch: 1, activeRunId: null, createdAt: new Date().toISOString(), allowedOrigin: 'http://app.local',
+  };
+  let activeRunId: string | null = null;
+  try {
+    const originalPage = session.page;
+    const originalContext = session.context;
+    const run = await dispatcher.start(session, 'Show this member’s checking transactions for the last 7 days.');
+    activeRunId = run.runId;
+    const handoffDeadline = Date.now() + 10_000;
+    while (run.status !== 'awaiting_human' && Date.now() < handoffDeadline) await new Promise(resolve => setTimeout(resolve, 10));
+    assert.equal(run.result?.code, 'HUMAN_DECISION_REQUIRED');
+    assert.equal(session.page, originalPage);
+    assert.equal(session.context, originalContext);
+    const automationEpoch = session.epoch;
+    const claim = await dispatcher.claimHandoff(run.runId, session);
+    assert.equal(claim.result, 'accepted');
+    if (claim.result !== 'accepted') throw new Error('HANDOFF_NOT_CLAIMED');
+    assert.equal(await dispatcher.executeHumanAction(run.runId, session, automationEpoch, { kind: 'click', name: 'Proceed anyway' }), 'stale_epoch');
+    assert.equal(await dispatcher.executeHumanAction(run.runId, session, claim.epoch, { kind: 'click', name: 'Re-authenticate' }), 'command_denied');
+    assert.equal(await dispatcher.resumeHandoff(run.runId, session, claim.epoch), 'checkpoint_failed');
+    assert.equal(await dispatcher.executeHumanAction(run.runId, session, claim.epoch, { kind: 'click', name: 'Proceed anyway' }), 'accepted');
+    assert.equal(await dispatcher.resumeHandoff(run.runId, session, claim.epoch), 'accepted');
+    const completionDeadline = Date.now() + 10_000;
+    while (['created', 'running', 'awaiting_human'].includes(run.status) && Date.now() < completionDeadline) await new Promise(resolve => setTimeout(resolve, 10));
+    const result = publicRunSchema.parse(run);
+    assert.equal(result.status, 'succeeded', JSON.stringify(result.result));
+    assert.equal(result.events.some(event => event.code === 'HUMAN_DECISION_REQUIRED'), true);
+    assert.equal(result.events.some(event => event.targetRef === 'button:Proceed anyway'), true);
+    assert.equal(result.events.some(event => event.code === 'AUTOMATION_CONTROL_RESUMED'), true);
+    assert.equal(result.events.some(event => event.type === 'model_request'), false);
+  } finally {
+    await browser.close(); await database.close(); await rm(catalogDirectory, { recursive: true, force: true });
+    if (activeRunId) await rm(path.resolve('.local', 'runs', activeRunId), { recursive: true, force: true });
+  }
 });
