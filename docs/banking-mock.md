@@ -33,6 +33,20 @@ Oracle's [Account Transactions documentation](https://docs.oracle.com/en/industr
 
 This is a navigable baseline with accessible controls, not yet a difficult legacy automation benchmark. Frames, poor markup, or other controlled variants can be introduced later without pretending the current app proves those capabilities.
 
+## Frontend modules
+
+The banking frontend lives in `apps/bank/src/`:
+
+- `main.tsx` mounts React and imports the stylesheet.
+- `App.tsx` composes the app and owns the verified-member selection.
+- `routing/BankRouter.tsx` selects pages and enforces the demo's member-context route gates. `hooks/useBankRoute.ts` listens for hash changes and restores content focus.
+- `pages/` contains the home, member lookup, member overview, account inquiry, and account screens. `AccountRoute.tsx` selects injected runtime conditions for the synthetic account screen.
+- `components/` contains the layout, shared member/account UI, transaction history, pending items, and automation panel.
+- `hooks/useAutomation.ts` owns run polling and start/cancel/handoff requests, separate from the automation panel's JSX.
+- `lib/` contains synthetic data helpers and account URL construction.
+
+Use `npm run format:bank` to format the banking source and `npm run format:bank:check` to verify formatting. The split preserves the rendered controls, routes, and automation contracts.
+
 ## Checks
 
 - `npm run test:bank-data`: two-stage lookup/verification including ambiguous identities and leading-zero last four, available balance arithmetic, inclusive date range/account scoping, and debit/credit partitioning.
